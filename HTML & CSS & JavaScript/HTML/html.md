@@ -132,3 +132,83 @@
 > </table>
 
 # 기본적인 HTML의 구조
+
+## body를 설명하는 태그인 `<HTML>`
+
+* html의 제목뿐만 아니라 body를 설명할 수 있는 태그로 대표적인 HTML의 구성이다.
+* `<title>` 뿐만 아니라 `<meta charset='utf-8'>` 등 여러 가지 태그가 올 수 있다.
+
+## HTML의 구조
+
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <title>My First HTML</title>
+    </head>
+    <body>
+        <h1>WEB</h1>
+        <ol>
+            <li>HTML</li>
+            <li>CSS</li>
+            <li>JavaScript</li>
+        </ol>
+    </body>
+</html>
+```
+
+> <!DOCTYPE html>
+> <html>
+>     <head>
+>         <meta charset='utf-8'>
+>         <title>My First HTML</title>
+>     </head>
+>     <body>
+>         <h1>WEB</h1>
+>         <ol>
+>             <li>HTML</li>
+>             <li>CSS</li>
+>             <li>JavaScript</li>
+>         </ol>
+>     </body>
+> </html>
+
+# 링크를 추가하는 ANCHOR 태그
+
+* HTML의 HT가 Hypertext인 것처럼 링크를 만드는 것은 HTML의 핵심 요소 중 하나이다
+* 닻을 내린다는 의미의 anchor의 앞 글자를 따서 `<a>`로 사용한다.
+
+```html
+<a href="www.naver.com">naver</a>
+```
+
+> <a href="www.naver.com">naver</a>
+
+# 인터넷과 웹
+
+> <div style="display: grid; grid-template-columns: 150px 1fr;">
+>     <div>
+>         <h1>인터넷</h1>
+>         <ul>
+>             <li>도시</li>
+>             <li>도로</li>
+>         </ul>
+>     </div>
+>     <div>
+>         <h1>웹</h1>
+>         <ul>
+>             <li>건물</li>
+>             <li>자동차</li>
+>         </ul>
+>     </div>
+> </div>
+위와 같은 스케일과 같이 무수히 방대한 인터넷 속에 웹이 있는 구조이다.
+
+# 서버와 클라이언트
+
+* 인터넷이 동작하기 위해선 기본적으로 두 대의 컴퓨터가 필요하다.
+* 웹 브라우저가 설치된 컴퓨터는 인터넷을 통해서 웹 서버에 요청(Request)을 보내고 웹 서버는 웹 브라우저의 요청에 응답(Response)하여 웹 브라우저에 대해 정보를 제공한다.
+* 이때, 웹 서버와 웹 브라우저의 관계를 각각 서버와 클라이언트로 지칭한다.
+---
+* 직접 서버를 구성하지 않고 외부에 맡기는 것을 호스팅이라고 하며 GitHub, BitBalloon, Azure Blob, Google Cloud Storage 등을 사용한다.
