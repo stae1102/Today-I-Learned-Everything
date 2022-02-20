@@ -19,6 +19,8 @@
 - [8. 제어할 태그 선택하기](#8-제어할-태그-선택하기)
 - [9. 조건문 예고](#9-조건문-예고)
 - [10. 중복의 제거를 위한 리팩토링](#10-중복의-제거를-위한-리팩토링)
+- [11. 반복문 예고](#11-반복문-예고)
+- [12. 배열](#12-배열)
 
 # 1. `<script>` 태그
 * 기본적으로 자바스크립트는 HTML 위에서 동작하는 언어이다.
@@ -304,3 +306,79 @@ document.querySelector('body').style.backgroundColor = 'black';
 ">
 ```
 
+# 11. 반복문 예고
+
+* 설정한 링크 태그의 style 값을 각각 설정하였을 때, 그 횟수가 적다면 수정하기에 부담스럽지 않지만, 그것이 1억 개라면 1억 번의 반복적인 작업을 수행해야 한다.
+* 따라서 이를 해결하기 위해 반복을 통해 내용을 수정하는 것이 더욱 효율적이다.
+
+```javascript
+var alist = document.querySelectorAll('a');
+var i = 0;
+while(i < alist.length) {
+    alist[i].style.color = 'powderblue';
+    console.log(alist[i]);
+    i = i + 1;
+}
+```
+
+# 12. 배열
+* 데이터 중에서 서로 연관된 데이터를 잘 정리 정돈해서 담아두는 일종의 수납 상자를 **배열(array)** 라고 생각하면 된다.
+
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+    </head>
+    <body>
+        <h1>Array</h1>
+        <h2>Syntax</h2>
+        <script>
+            var coworkers = ["egoing", "leezche"];
+        </script>
+    </body>
+</html>
+```
+
+* 배열에 들어있는 항목을 가져올 때는 변수에 []를 입력하여 가져올 수 있다.
+* 본 코드를 예로 들자면 coworkers[0]라고 쓸 수 있다.
+
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+    </head>
+    <body>
+        <h1>Array</h1>
+        <h2>Syntax</h2>
+        <script>
+            var coworkers = ["egoing", "leezche"];
+        </script>
+
+        <h2>get</h2>
+        <script>
+            document.write(coworkers[0]);
+            document.write(coworkers[1]);
+        </script>
+    </body>
+</html>
+```
+
+* 배열 안에 몇 개의 값이 있는지도 javascript 코드를 통해 확인할 수 있다.
+
+```html
+<script>
+    document.write(coworkers.length);
+</script>
+```
+* data를 추가하고 싶을 때는 `.push(value)`를 추가한다.
+
+```html
+<script>
+    coworkers.push('duru');
+    coworkers.push('taeho');
+</script>
+```
