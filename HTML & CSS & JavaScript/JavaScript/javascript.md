@@ -17,6 +17,8 @@
 - [6. CSS 기초: `<style>` 태그](#6-css-기초-style-태그)
 - [7. CSS 기초: 선택자](#7-css-기초-선택자)
 - [8. 제어할 태그 선택하기](#8-제어할-태그-선택하기)
+- [9. 조건문 예고](#9-조건문-예고)
+- [10. 중복의 제거를 위한 리팩토링](#10-중복의-제거를-위한-리팩토링)
 
 # 1. `<script>` 태그
 * 기본적으로 자바스크립트는 HTML 위에서 동작하는 언어이다.
@@ -239,3 +241,66 @@ document.querySelector('body').style.
 ```javascript
 document.querySelector('body').style.backgroundColor = 'black';
 ```
+
+# 9. 조건문 예고
+* 조건문이라고 하는 것은 하나의 프로그램이 하나의 흐름으로 가는 것이 아니라 조건에 따라 다른 순서의 기능들이 실행되게 하는 것이다.
+* 본 교재의 예제에서 night 버튼과 day 버튼이 있는데, 사용자가 상태를 보고 night인지 day인지 선택하는 것보다 야간모드일 때 클릭할 때 누르면 주간모드가, 주간모드일 때 클릭하면 야간모드가 되는 기능을 구현하는 편이 더 사용자 편의에 좋을 것 같다.
+* 이러한 것을 **토글(toggle)** 이라고 한다.
+* 이때, 이 토글을 구현하기 위해 각 조건에 따라 분기하는 것이 중요하며, 이 분기를 조건문을 통해 적용할 수 있다.
+
+```html
+<input id="night_day" type="button" value="night" onclick="
+    if(document.querySelector('#night_day').value === 'night') {
+        document.querySelector('body').style.backgroundColor = 'black';
+        document.querySelector('body').style.color = 'white';
+        document.querySelector('#night_day').value = 'day';
+    } else {
+        document.querySelector('body').style.backgroundColor = 'white';
+        document.querySelector('body').style.color = 'black';
+        document.querySelector('#night_day').value = 'night';
+    }
+">
+```
+* if라는 조건문에 따라 참일 때 if 하 코드가, 거짓일 때는 else 하 코드가 실행되는 것이다.
+* if의 조건에 있는 `===`는 비교 연산자로 이 비교 연산자를 통해 **불리언(boolean)** 이 만들어졌다.
+
+# 10. 중복의 제거를 위한 리팩토링
+
+* 리팩토링이란 단어에서 팩토리(factory)는 '공장'이며, 리(re)는 '다시'라는 뜻이므로 공장으로 다시 보내 개선한다는 느낌이다.
+* 코딩을 하고 났을 때, 코드의 가독성을 높이고, 유지보수를 편리하게 만들고, 중복된 코드를 줄이는 방향으로 코드를 개선하는 작업을 리팩토링이라고 한다.
+* 앞선 `javascriptdocument.querySelector('#night_day')`와 같은 코드는 사실 자기 자신을 가리키고 있기 때문에, 이를 대신해 다른 코드가 사용되면 더욱 효율적일 것이다.
+* 이때, 같은 이벤트 안에서 실행되는 코드에서는 현재 코드가 속해있는 태그를 가리키도록 약속돼 있는 특수한 키워드를 사용하는데 이것이 바로 `this` 키워드다.
+* 이를 고려하여 이전 예제를 수정해보자면,
+
+```html
+<input type="button" value="night" onclick="
+    if(this.value === 'night') {
+        document.querySelector('body').style.backgroundColor = 'black';
+        document.querySelector('body').style.color = 'white';
+        document.querySelector('#night_day').value = 'day';
+    } else {
+        document.querySelector('body').style.backgroundColor = 'white';
+        document.querySelector('body').style.color = 'black';
+        this.value = 'night';
+    }
+">
+```
+
+* 또, 여기서 `document.querySelector('body')`도 중복되는데 이러한 것도 간결하게 표현하는 것이 클린 코드라고 할 수 있다.
+* 예를 들어 이러한 경우 target이라는 변수를 생성하여 할당하는 방법도 있다.
+  
+```html
+<input id="night_day" type="button" value="night" onclick="
+    var target = document.querySelector('body');
+    if(this.value === 'night') {
+        target.style.backgroundColor = 'black';
+        target.style.color = 'white';
+        document.querySelector('#night_day').value = 'day';
+    } else {
+        target.style.backgroundColor = 'white';
+        target.style.color = 'black';
+        this.value = 'night';
+    }
+">
+```
+
