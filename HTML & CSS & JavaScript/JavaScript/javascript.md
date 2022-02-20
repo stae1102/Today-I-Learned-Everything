@@ -21,6 +21,10 @@
 - [10. 중복의 제거를 위한 리팩토링](#10-중복의-제거를-위한-리팩토링)
 - [11. 반복문 예고](#11-반복문-예고)
 - [12. 배열](#12-배열)
+- [13. 반복문](#13-반복문)
+- [14. 배열과 반복문](#14-배열과-반복문)
+- [15. 배열과 반복문의 활용](#15-배열과-반복문의-활용)
+- [16. 함수 예고](#16-함수-예고)
 
 # 1. `<script>` 태그
 * 기본적으로 자바스크립트는 HTML 위에서 동작하는 언어이다.
@@ -381,4 +385,154 @@ while(i < alist.length) {
     coworkers.push('duru');
     coworkers.push('taeho');
 </script>
+```
+
+# 13. 반복문
+
+* 반복문(루프)
+* 여러 코드를 최소한의 코드로 나타내기 위해 반복문을 사용할 수 있다.
+* 반복문은 조건이 True일 때, 코드가 실행되고 false일 때 반복이 종료되어 while문 바깥쪽에 있는 코드가 실행된다.
+* 즉, 반복문이라는 것은 순서대로 실행되는 프로그램의 흐름을 제어하는 제어문이라고 할 수 있다.
+* 반복문은 언제 종료될 것인가를 잘 지정하는 것이 중요하다. 그러기 위해서는 두 줄의 코드가 몇 번 실행되는지 어딘가에 적어둘 필요가 있다. 이를 위해서 **변수**가 필요하다.
+* i=i+1은 '기존의 i의 값에 1을 더한 결과를 i의 새로운 값으로 준다'라는 뜻이다.
+
+```html
+<script>
+    document.write('<li>1</li>');
+    var i = 0;
+    while(i < 3) {
+        document.write('<li>2</li>');
+        document.write('<li>3</li>');
+        i = i + 1;
+    }
+    document.write('<li>4</li>');
+</script>
+```
+
+# 14. 배열과 반복문
+
+예를 들어 아래와 같은 코드가 있다고 할 때,
+
+```html
+<ul>
+    <li>egoing</li>
+    <li>leezche</li>
+    <li>duru</li>
+    <li>taeho</li>
+</ul>
+```
+혹은 `<li>` 태그 대신 목록이 아주 복잡한 태그이고 이것에 대한 수정이 빈번하게 일어난다면 글 목록을 작성하는 것이 쉽지 않을 것이다. 이처럼 서로 연관된 데이터를 담는 방법 중 배열이 있는데, 이 배열에 담긴 데이터를 순차적으로 꺼내 `<li>`라는 태그를 만들어 문제를 해결할 수 있다.
+
+```html
+<body>
+    <h1>Loop & Array</h1>
+    <script>
+        var coworkers = ['egoing', 'leezche', 'duru', 'taeho'];
+    </script>
+    <h2>Co workers</h2>
+    <ul>
+        <script>
+            var i = 0;
+            while(i < coworkers.length) {
+                document.write('<li>' + coworkers[i] + '</li>');
+                i = i + 1;
+            }
+        </script>
+    </ul>
+</body>
+```
+
+하지만 위와 같은 방법은 데이터가 바뀌어도 유연하게 작동하지 않는다. 따라서 `i < 4`가 아니라 coworkers의 배열에 담긴 원소의 개수로 설정하면 직접 개수를 입력하지 않더라도 적절히 실행될 것이다.
+
+# 15. 배열과 반복문의 활용
+
+* 리스트를 변수에 넣어 반복문을 통해 조건을 수행할 수 있다.
+
+```html
+<input id="night_day" type="button" value="night" onclick="
+            var target = document.querySelector('body');
+            if(this.value === 'night') {
+                target.style.backgroundColor = 'black';
+                target.style.color = 'white';
+                this.value = 'day';
+
+                var alist = document.querySelectorAll('a');
+                var i = 0;
+                while(i < alist.length) {
+                    alist[i].style.color = 'powderblue';
+                    console.log(alist[i]);
+                    i = i + 1;
+                }
+
+            } else {
+                target.style.backgroundColor = 'white';
+                target.style.color = 'black';
+                this.value = 'night';
+
+                var alist = document.querySelectorAll('a');
+                var i = 0;
+                while(i < alist.length) {
+                    alist[i].style.color = 'blue';
+                    console.log(alist[i]);
+                    i = i + 1;
+                }
+            }
+">
+```
+
+# 16. 함수 예고
+
+* 코드가 많아지면 그 코드를 잘 정돈하기 위한 도구가 필요하다. 그때 사용할 수 있는 도구가 **함수**이고, 그것보다 더 큰 도구는 **객체(추후 살펴 볼 예정)** 이다.
+
+* 위 상황에서도 `<input>`태그가 반복되게 된다면 이를 해결하기 위해 많은 리소스가 소모된다. 따라서, 이를 해결하기 위한 방법이 필요하다.
+
+```html
+<head>
+    <title>WEB1 - JavaScript</title>
+    <meta charset="utf-8">
+    <script>
+        function nightDayHandler(self) {
+            var target = document.querySelector('body');
+            if(this.value === 'night') {
+                target.style.backgroundColor = 'black';
+                target.style.color = 'white';
+                this.value = 'day';
+
+                var alist = document.querySelectorAll('a');
+                var i = 0;
+                while(i < alist.length) {
+                    alist[i].style.color = 'powderblue';
+                    console.log(alist[i]);
+                    i = i + 1;
+                }
+
+            } else {
+                target.style.backgroundColor = 'white';
+                target.style.color = 'black';
+                this.value = 'night';
+
+                var alist = document.querySelectorAll('a');
+                var i = 0;
+                while(i < alist.length) {
+                    alist[i].style.color = 'blue';
+                    console.log(alist[i]);
+                    i = i + 1;
+                }
+            }
+        }
+    </script>
+</head>
+
+... 생략 ...
+
+<input id="night_day" type="button" value="night" onclick="
+            nightDayHandler(this);
+">
+
+... 생략 ...
+
+<input id="night_day" type="button" value="night" onclick="
+    nightDayHandler(this);
+">
+
 ```
