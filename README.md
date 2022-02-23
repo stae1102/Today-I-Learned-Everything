@@ -21,4 +21,5 @@ All of  the summary that I learned today
 
 # JavaScript
 - [JavaScript](JavaScript/Do%20it!%20자바스크립트%20입문.md)
-  - []
+  - [Chapter 2. 자바스크립트와 친해지기](JavaScript/Do%20it!%20자바스크립트%20입문.md/#chapter-2-자바스크립트와-친해지기)
+  - [Chapter 3. 변수와 자료형 그리고 연산자](JavaScript/Do%20it!%20자바스크립트%20입문.md/#chapter-3-변수와-자료형-그리고-연산자)
