@@ -17,7 +17,7 @@ All of  the summary that I learned today
 
 # Git & GitHub
 - [Git&GitHub](Git%20&%20GitHub/Git.md)
-  - [0-1. Git 설치 및 로컬저장소에서 커밋 관리](Git%20&%20GitHub/Git.md/(#0-1-git-설치-및-로컬저장소에서-커밋-관리))
+  - [0-1. Git 설치 및 로컬저장소에서 커밋 관리](Git%20&%20GitHub/Git.md/#0-1-git-설치-및-로컬저장소에서-커밋-관리)
 
 # JavaScript
 - [JavaScript](JavaScript/Do%20it!%20자바스크립트%20입문.md)
