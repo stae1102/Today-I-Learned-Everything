@@ -31,6 +31,35 @@
       - [테이블 생성하기](#테이블-생성하기)
     - [2-2-4. 데이터 입력하기](#2-2-4-데이터-입력하기)
     - [2-2-5. 데이터 활용하기](#2-2-5-데이터-활용하기)
+  - [2-3. 데이터베이스 개체](#2-3-데이터베이스-개체)
+    - [2-3-1. 인덱스](#2-3-1-인덱스)
+      - [인덱스 개념 이해하기](#인덱스-개념-이해하기)
+      - [인덱스 실습하기](#인덱스-실습하기)
+    - [2-3-2. 뷰](#2-3-2-뷰)
+      - [뷰 개념 이해하기](#뷰-개념-이해하기)
+      - [뷰 실습하기](#뷰-실습하기)
+    - [2-3-3. 스토어드 프로시저](#2-3-3-스토어드-프로시저)
+      - [스토어드 프로시저 개념 이해하기](#스토어드-프로시저-개념-이해하기)
+      - [스토어드 프로시저 실습하기](#스토어드-프로시저-실습하기)
+    - [2-3-4. CREATE 문과 DROP 문](#2-3-4-create-문과-drop-문)
+- [Chapter 3. SQL 기본 문법](#chapter-3-sql-기본-문법)
+  - [3-1. 기본 중에 기본 SELECT ~ FROM ~ WHERE](#3-1-기본-중에-기본-select--from--where)
+    - [3-1-1. 실습용 데이터베이스 구축](#3-1-1-실습용-데이터베이스-구축)
+      - [실습용 데이터베이스 개요](#실습용-데이터베이스-개요)
+      - [market_db.sql 파일 내용 살펴보기](#market_dbsql-파일-내용-살펴보기)
+    - [3-1-2. 기본 조회하기: SELECT ~ FROM](#3-1-2-기본-조회하기-select--from)
+      - [USE문](#use문)
+      - [SELECT 문의 기본 형식](#select-문의-기본-형식)
+      - [SELECT와 FROM](#select와-from)
+    - [3-1-3. 특정한 조건만 조회하기: SELECT ~ FROM ~ WHERE](#3-1-3-특정한-조건만-조회하기-select--from--where)
+      - [WHERE 없이 조회하기](#where-없이-조회하기)
+      - [기본적인 WHERE 절](#기본적인-where-절)
+      - [관계 연산자, 논리 연산자의 사용](#관계-연산자-논리-연산자의-사용)
+      - [BETWEEN ~ AND](#between--and)
+      - [IN()](#in)
+      - [LIKE](#like)
+    - [3-1-4. 서브 쿼리](#3-1-4-서브-쿼리)
+  - [3-2. 좀 더 깊게 알아보는 SELECT문](#3-2-좀-더-깊게-알아보는-select문)
 
 # Chapter 1. 데이터베이스와 SQL
 
@@ -228,3 +257,378 @@
 > ```SQL
 > SELECT * FROM member WHERE member_name = '아이유';
 > ```
+
+## 2-3. 데이터베이스 개체
+
+* 테이블은 데이터베이스의 핵심 개체이지만, 그외에도 **인덱스, 뷰, 스토어드 프로시저**, 트리거, 함수, 커서 등의 개체도 필요합니다.
+
+* 인덱스는 데이터를 조회할 때 결과가 나오는 속도를 획기적으로 빠르게 해주고, 뷰는 테이블의 일부를 제한적으로 표현할 때 주로 사용합니다. 스토어드 프로시저는 SQL에서 프로그래밍이 가능하도록 해주고, 트리거는 잘못된 데이터가 들어가는 것을 미연에 방지하는 기능을 합니다.
+
+* 모든 데이터베이스 개체는 테이블과 상호 연관이 있습니다.
+
+### 2-3-1. 인덱스
+
+* 데이터를 조회할 때 테이블에 데이터가 많아질수록 결과가 나오는 시간이 많이 소요됩니다. 인덱스는 이런 경우 결과가 나오는 시간을 대폭 줄여줍니다.
+
+#### 인덱스 개념 이해하기
+  
+* 인덱스란 책의 찾아보기와 비슷합니다. 찾아보기를 통해 원하는 단어를 찾아 그 페이지로 이동하는 효율적인 방법입니다.
+
+* 실무에서는 수천만~수억 건 이상의 데이터를 처리할 때 인덱스 없이 전체 데이터를 찾을 수 없습니다.
+
+#### 인덱스 실습하기
+
+```SQL
+CREATE INDEX idx_member_name ON member(member_name);
+```
+
+* 위 SQL 문장에서 `ON member(member_name);`의 의미는 member 테이블의 member_name 열에 인덱스를 지정하라는 의미입니다. 이를 통해 인덱스를 생성할 수 있습니다.
+
+* 인덱스를 생성한 후 다시 SELECT문을 실행하면 **Non-Unique Key Lookup**으로 결과를 찾았다고 나오는데, Key Lookup은 인덱스를 통해 결과를 찾았다고 기억하면 됩니다. 이런 방법은 **인덱스 검색(Index Scan)** 이라고 부릅니다
+
+### 2-3-2. 뷰
+
+* 뷰를 활용하면 보안도 강화하고, SQL 문도 간단하게 사용할 수 있습니다.
+
+#### 뷰 개념 이해하기
+
+* 뷰(view)를 한 마디로 정의하면 '가상의 테이블'이라고 할 수 있습니다. 일반 사용자의 입장에서는 테이블과 뷰를 구분할 수 없습니다. 다만 뷰는 실제 데이터를 가지고 있지 않으며, 진짜 테이블에 링크(link)된 개념이라고 생각하면 됩니다.
+
+* 윈도우즈의 '바로 가기 아이콘'과 같이 실제로 저장된 프로그램 파일과 아이콘을 연결해주는 맥락과 비슷합니다.
+
+* 뷰는 실체는 없으며 테이블과 연결되어 있는 것뿐입니다. 뷰의 실체는 바로 SELECT문입니다.
+
+#### 뷰 실습하기
+
+```SQL
+CREATE VIEW member_view
+AS
+    SELECT * FROM member;
+```
+
+* 위와 같은 식을 통해 VIEW를 생성할 수 있고, 이렇게 만들어놓은 뷰를 통해 정보를 확인할 수 있습니다.
+
+```SQL
+SELECT * FROM member_view;
+```
+
+* 뷰를 사용하는 이유는 **보안에 도움이 되며, 긴 SQL 문을 간략하게 만들 수 있기 때문입니다.**
+
+### 2-3-3. 스토어드 프로시저
+
+#### 스토어드 프로시저 개념 이해하기
+
+* 스토어드 프로시저란 MySQL에서 제공하는 **프로그래밍 기능**으로, 여러 개의 SQL문을 하나로 묶어서 편리하게 사용할 수 있습니다.
+
+#### 스토어드 프로시저 실습하기  
+
+> 1. 자주 반복해서 사용할 SQL문이 있다고 할 때, 매번 SQL문을 입력하면 오타를 입력할 수도 있으며 시간이 오래 소요될 수 있습니다. 따라서 이러한 SQL문을 스토어드 프로시저로 만들어서 사용하는 것이 더 효율적일 것입니다.
+> 
+> 2.
+> ```SQL
+> DELIMITER //
+> CREATE PROCEDURE myProc()
+> BEGIN
+>   	SELECT * FROM member WHERE member_name = '나훈아';
+>     SELECT * FROM product WHERE product_name = '삼각김밥';
+> END //
+> DELIMITER;
+> ```
+> 
+> * 첫 행과 마지막 행에 **구분 문자**라는 의미의 **`DELIMITER // ~ DELIMITER ;`** 문이 나왔습니다. 이것은 스토어드 프리시저를 묶어주는 약속이라고 생각합니다. 그리고 **BEGIN과 END** 사이에 SQL 문을 넣으면 됩니다.
+> 
+> 3. 이제부터 BEGIN과 END 사이의 SQL문을 실행할 필요 없이 만들어둔 스토어드 프로시저를 호출하기 위해서 CALL문을 실행하면 됩니다.
+> 
+> ```SQL
+> CALL myProc()
+> ```
+
+
+### 2-3-4. CREATE 문과 DROP 문
+
+* 데이터베이스 개체를 만들기 위해 `CREATE 개체_종류 개체_이름 ~`의 형식을 사용합니다.
+
+* 이와 반대로 데이터베이스 개체를 삭제하기 위해서는 `DROP 개체_종류 개체_이름` 형식을 사용합니다.
+
+# Chapter 3. SQL 기본 문법
+
+## 3-1. 기본 중에 기본 SELECT ~ FROM ~ WHERE
+
+* SELECT 문은 구축이 완료된 테이블에서 데이터를 추출하는 기능을 합니다. 그러므로 SELECT를 아무리 많이 사용해도 기존의 데이터가 변경되지는 않습니다.
+
+* SELECT의 가장 기본 형식은 `SELECT ~ FROM ~ WHERE`입니다. SELECT 바로 다음에는 **열 이름**이, FROM 다음에는 **테이블 이름**이 나옵니다. WHERE 다음에는 **조건식**이 나오는데, 조건식을 다양하게 표현함으로써 데이터베이스에서 원하는 데이터를 추출할 수 있습니다.
+
+### 3-1-1. 실습용 데이터베이스 구축
+
+#### 실습용 데이터베이스 개요
+
+* '인터넷 마켓 DB 구상도' 파일을 통해 실습 데이터를 구축.
+* 생략
+
+#### market_db.sql 파일 내용 살펴보기
+
+```sql
+DROP DATABASE IF EXISTS market_db; -- 만약 market_db가 존재하면 우선 삭제한다.
+CREATE DATABASE market_db;
+
+USE market_db;
+CREATE TABLE member -- 회원 테이블
+( mem_id  		CHAR(8) NOT NULL PRIMARY KEY, -- 사용자 아이디(PK)
+  mem_name    	VARCHAR(10) NOT NULL, -- 이름
+  mem_number    INT NOT NULL,  -- 인원수
+  addr	  		CHAR(2) NOT NULL, -- 지역(경기,서울,경남 식으로 2글자만입력)
+  phone1		CHAR(3), -- 연락처의 국번(02, 031, 055 등)
+  phone2		CHAR(8), -- 연락처의 나머지 전화번호(하이픈제외)
+  height    	SMALLINT,  -- 평균 키
+  debut_date	DATE  -- 데뷔 일자
+);
+CREATE TABLE buy -- 구매 테이블
+(  num 		INT AUTO_INCREMENT NOT NULL PRIMARY KEY, -- 순번(PK)
+   mem_id  	CHAR(8) NOT NULL, -- 아이디(FK)
+   prod_name 	CHAR(6) NOT NULL, --  제품이름
+   group_name 	CHAR(4)  , -- 분류
+   price     	INT  NOT NULL, -- 가격
+   amount    	SMALLINT  NOT NULL, -- 수량
+   FOREIGN KEY (mem_id) REFERENCES member(mem_id)
+);
+
+INSERT INTO member VALUES('TWC', '트와이스', 9, '서울', '02', '11111111', 167, '2015.10.19');
+INSERT INTO member VALUES('BLK', '블랙핑크', 4, '경남', '055', '22222222', 163, '2016.08.08');
+INSERT INTO member VALUES('WMN', '여자친구', 6, '경기', '031', '33333333', 166, '2015.01.15');
+INSERT INTO member VALUES('OMY', '오마이걸', 7, '서울', NULL, NULL, 160, '2015.04.21');
+INSERT INTO member VALUES('GRL', '소녀시대', 8, '서울', '02', '44444444', 168, '2007.08.02');
+INSERT INTO member VALUES('ITZ', '잇지', 5, '경남', NULL, NULL, 167, '2019.02.12');
+INSERT INTO member VALUES('RED', '레드벨벳', 4, '경북', '054', '55555555', 161, '2014.08.01');
+INSERT INTO member VALUES('APN', '에이핑크', 6, '경기', '031', '77777777', 164, '2011.02.10');
+INSERT INTO member VALUES('SPC', '우주소녀', 13, '서울', '02', '88888888', 162, '2016.02.25');
+INSERT INTO member VALUES('MMU', '마마무', 4, '전남', '061', '99999999', 165, '2014.06.19');
+
+INSERT INTO buy VALUES(NULL, 'BLK', '지갑', NULL, 30, 2);
+INSERT INTO buy VALUES(NULL, 'BLK', '맥북프로', '디지털', 1000, 1);
+INSERT INTO buy VALUES(NULL, 'APN', '아이폰', '디지털', 200, 1);
+INSERT INTO buy VALUES(NULL, 'MMU', '아이폰', '디지털', 200, 5);
+INSERT INTO buy VALUES(NULL, 'BLK', '청바지', '패션', 50, 3);
+INSERT INTO buy VALUES(NULL, 'MMU', '에어팟', '디지털', 80, 10);
+INSERT INTO buy VALUES(NULL, 'GRL', '혼공SQL', '서적', 15, 5);
+INSERT INTO buy VALUES(NULL, 'APN', '혼공SQL', '서적', 15, 2);
+INSERT INTO buy VALUES(NULL, 'APN', '청바지', '패션', 50, 1);
+INSERT INTO buy VALUES(NULL, 'MMU', '지갑', NULL, 30, 1);
+INSERT INTO buy VALUES(NULL, 'APN', '혼공SQL', '서적', 15, 1);
+INSERT INTO buy VALUES(NULL, 'MMU', '지갑', NULL, 30, 4);
+
+SELECT * FROM member;
+SELECT * FROM buy;
+
+```
+
+> **데이터 베이스 만들기**
+> ```sql
+> DROP DATABASE IF EXISTS market_db;
+> CREATE DATABASE market_db;
+> ```
+> 1. `DROP DATABASE`는 market_db를 삭제하는 문장입니다. 만약 이미 market_db가 존재하면 삭제합니다.
+> 2. 데이터베이스를 새로 만듭니다.
+
+> **회원 테이블(member) 만들기**
+> ```sql
+> USE market_db;
+> CREATE TABLE member -- 회원 테이블
+> ( mem_id  		CHAR(8) NOT NULL PRIMARY KEY, -- 사용자 아이디(PK)
+>   mem_name    	VARCHAR(10) NOT NULL, -- 이름
+>   mem_number    INT NOT NULL,  -- 인원수
+>   addr	  		CHAR(2) NOT NULL, -- 지역(경기,서울,경남 식으로 2글자만입력)
+>   phone1		CHAR(3), -- 연락처의 국번(02, 031, 055 등)
+>   phone2		CHAR(8), -- 연락처의 나머지 전화번호(하이픈제외)
+>   height    	SMALLINT,  -- 평균 키
+>   debut_date	DATE  -- 데뷔 일자
+> );
+> ```
+> (SQL에서 하이픈(-) 두 개는 주석으로 인식합니다.)
+> 1. `USE`문은 market_db 데이터베이스를 선택하는 문장입니다.
+> 2. `CREATE ~ );`는 member 테이블을 만드는 과정입니다.
+
+> **구매 테이블(buy) 만들기**
+> ```sql
+> CREATE TABLE buy -- 구매 테이블
+> (  num 		INT AUTO_INCREMENT NOT NULL PRIMARY KEY, -- 순번(PK)
+>    mem_id  	CHAR(8) NOT NULL, -- 아이디(FK)
+>    prod_name 	CHAR(6) NOT NULL, --  제품이름
+>    group_name 	CHAR(4)  , -- 분류
+>    price     	INT  NOT NULL, -- 가격
+>    amount    	SMALLINT  NOT NULL, -- 수량
+>    FOREIGN KEY (mem_id) REFERENCES member(mem_id)
+> );
+> ```
+> 1. 구매 테이블을 생성합니다.
+> 2. AUTO_INCREMENT는 자동으로 숫자를 입력해준다는 의미입니다.
+
+> **데이터 입력하기**
+> ```sql
+> INSERT INTO member VALUES('TWC', '트와이스', 9, '서울', '02', '11111111', 167, '2015.10.19');
+> INSERT INTO buy VALUES(NULL, 'BLK', '지갑', NULL, 30, 2);
+> ```
+> 1. 회원 테이블(member)에 값을 입력합니다. CHAR, VARCHAR, DATE형은 작은 따옴표로 값을 묶어줬습니다. INT형은 작은 따옴표 없이 그냥 넣어주면 됩니다.
+> 2. 구매 테이블(buy)의 첫 번째 열인 순번(num)은 자동으로 입력되므로 NULL이라고 써주면 됩니다.
+
+> **데이터 조회하기**
+> ```sql
+> SELECT * FROM member;
+> SELECT * FROM buy;
+> ```
+
+### 3-1-2. 기본 조회하기: SELECT ~ FROM
+
+#### USE문
+
+* SELECT 문을 실행하려면 먼저 사용할 데이터베이스를 지정해야 합니다. 현재 사용하는 데이터베이스를 지정 또는 변경하는 형식은 다음과 같습니다.
+
+```sql
+USE 데이터베이스_이름;
+```
+
+#### SELECT 문의 기본 형식
+
+```sql
+SELECT 열_이름
+    FROM 테이블_이름
+    WHERE 조건식
+    GROUP BY 열_이름
+    HAVING 조건식
+    ORDER BY 열_이름
+    LIMIT 숫자
+```
+
+이중 가장 핵심적인 형식은 다음과 같습니다.
+
+```sql
+SELECT 열_이름
+    FROM 테이블_이름
+    WHERE 조건식
+```
+
+#### SELECT와 FROM
+
+* `SELECT * FROM member;` : 테이블에서 모든 열(*)을 가져옵니다.
+  
+* 원래 테이블의 전체 이름은 **데이터베이스_이름.테이블_이름** 형식으로 표현합니다. 하지만 데이터베이스 이름을 생략하면 USE 문으로 지정해 놓은 데이터베이스가 자동으로 선택됩니다. 따라서 `SELECT * FROM market_db.member;`와 같은 의미를 가집니다.
+
+* 특정 열을 가져오기 위해서는 SELECT와 FROM 사이에 원하는 열_이름을 작성하며, 여러 개일 경우에는 콤마(,)로 구분하고, 원하는 순서대로 나열할 수 있습니다.
+
+```sql
+SELECT addr, debut_date, mem_name
+    FROM member;
+```
+
+**열 이름 다음에 지정하고 싶은 별칭(alias)를 입력할 수 있습니다.** Output은 별칭으로 된 열로 출력합니다. 별칭에 공백이 있다면 큰따옴표(")로 묶어줍니다.
+
+```sql
+SELECT addr 주소, debut_date "데뷔 일자", mem_name
+    FROM member;
+```
+
+### 3-1-3. 특정한 조건만 조회하기: SELECT ~ FROM ~ WHERE
+
+#### WHERE 없이 조회하기
+
+* 조건 없이 모든 자료를 불러오면 리소스를 많이 소모하게 됩니다. 따라서 WHERE절을 함께 사용합니다.
+
+#### 기본적인 WHERE 절
+
+* WHERE 절은 조회하는 결과에 특정한 조건을 추가해서 원하는 데이터만 보고 싶을 때 사용합니다.
+
+```sql
+SELECT 열_이름 FROM 테이블_이름 WHERE 조건식;
+```
+또는
+```sql
+SELECT 열_이름
+    FROM 테이블_이름
+    WHERE 조건식;
+```
+
+* 지금 찾는 이름(mem_name)이 '블랙핑크'라면 다음과 같이 작성합니다. **열_이름 = 값**은 열의 값에 해당하는 결과만 출력해줍니다.
+
+```sql
+SELECT * FROM member WHERE mem_name = '블랙핑크';
+```
+
+#### 관계 연산자, 논리 연산자의 사용
+
+* 숫자로 표현된 데이터는 범위를 지정할 수 있습니다. 예를 들어 평균 키(height)가 162 이하인 회원을 검색하려면 다음과 같이 **관계 연산자**를 사용해서 조회할 수 있습니다.
+
+```sql
+SELECT mem_id, mem_name
+    FROM member
+    WHERE height <= 162;
+```
+
+* 2가지 이상의 조건을 만족하도록 하기 위해선 **논리 연산자(AND, OR)** 를 이용해서 조회할 수 있습니다.
+
+```sql
+SELECT mem_name, height, mem_number
+    FROM member
+    WHERE height >= 165 AND mem_number > 6;
+```
+
+#### BETWEEN ~ AND
+
+* 범위에 있는 값을 구하는 경우에 `BETWEEN ~ AND`를 사용해도 됩니다.
+
+```sql
+SELECT mem_name, height
+    FROM member
+    WHERE height BETWEEN 163 AND 165;
+```
+
+#### IN()
+
+* 주소 등의 문자로 표현된 데이터는 여러 문자 중 하나에 포함되는지 비교하는 기능인 IN()을 사용할 수 있습니다
+
+```sql
+SELECT mem_name, addr
+    FROM member
+    WHERE addr IN('경기', '전남', '경남');
+```
+
+#### LIKE
+
+* 문자열의 일부 글자를 검색하려면 LIKE를 사용합니다. "우%"와 같은 표현은 제일 앞 글자가 "우"인 모든 값을 허용한다는 뜻입니다.
+
+```sql
+SELECT *
+    FROM member
+    WHERE mem_name LIKE '우%';
+```
+
+* 한 글자와 매치하기 위해서는 **언더바(_)** 를 사용합니다.
+
+```sql
+SELECT *
+    FROM member
+    WHERE mem_name LIKE '__핑크';
+```
+
+### 3-1-4. 서브 쿼리
+
+* SELECT 안에 또 다른 SELECT가 들어갈 수 있습니다.
+
+* 예를 들어, SQL을 통해 에이핑크의 평균 키(height)를 알아보면
+
+```sql
+SELECT height FROM member WHERE mem_name = '에이핑크';
+```
+
+* 에이핑크의 평균 키를 알았으니 이 평균 키를 통해 164보다 키가 큰 회원을 조회하면 됩니다.
+
+```sql
+SELECT mem_name, height FROM member WHERE height > 164;
+```
+
+* 이 두 SQL을 하나로 만드는 것도 가능합니다.
+
+```sql
+SELECT mem_name, height FROM member
+    WHERE height > (SELECT height FROM member WHERE mem_name = '에이핑크');
+```
+
+## 3-2. 좀 더 깊게 알아보는 SELECT문
