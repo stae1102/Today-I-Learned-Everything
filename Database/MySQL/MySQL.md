@@ -60,6 +60,22 @@
       - [LIKE](#like)
     - [3-1-4. 서브 쿼리](#3-1-4-서브-쿼리)
   - [3-2. 좀 더 깊게 알아보는 SELECT문](#3-2-좀-더-깊게-알아보는-select문)
+    - [3-2-1. ORDER BY 절](#3-2-1-order-by-절)
+      - [출력의 개수를 제한: LIMIT](#출력의-개수를-제한-limit)
+      - [중복된 결과를 제거: DISTINCT](#중복된-결과를-제거-distinct)
+    - [3-2-2. GROUP BY 절](#3-2-2-group-by-절)
+      - [집계 함수](#집계-함수)
+      - [HAVING 절](#having-절)
+  - [3-3. 데이터 변경을 위한 SQL문](#3-3-데이터-변경을-위한-sql문)
+    - [3-3-1. 데이터 입력: INSERT](#3-3-1-데이터-입력-insert)
+      - [INSERT 문의 기본 문법](#insert-문의-기본-문법)
+      - [자동으로 증가하는 AUTO_INCREMENT](#자동으로-증가하는-auto_increment)
+      - [다른 테이블의 데이터를 한 번에 입력하는 INSERT INTO ~ SELECT](#다른-테이블의-데이터를-한-번에-입력하는-insert-into--select)
+    - [3-3-2. 데이터 수정: UPDATE](#3-3-2-데이터-수정-update)
+      - [UPDATE 문의 기본 문법](#update-문의-기본-문법)
+      - [WHERE가 없는 UPDATE문](#where가-없는-update문)
+  - [3-3-3. 데이터 삭제: DELETE](#3-3-3-데이터-삭제-delete)
+  - [3-3-4. 대용량 테이블의 삭제](#3-3-4-대용량-테이블의-삭제)
 
 # Chapter 1. 데이터베이스와 SQL
 
@@ -632,3 +648,277 @@ SELECT mem_name, height FROM member
 ```
 
 ## 3-2. 좀 더 깊게 알아보는 SELECT문
+
+* SELECT문에서는 결과의 정렬을 위한 **ORDER BY**, 결과의 개수를 제한하는 **LIMIT**, 중복된 데이터를 제거하는 **DISTINCT** 등을 사용할 수 있습니다.
+
+* **GROUP BY** 절은 지정한 열의 데이터들을 같은 데이터끼리 묶어서 결과를 추출합니다. 주로 그룹으로 묶는 경우는 합계, 평균, 개수 등을 처리할 때 사용하므로 집계 함수와 함께 사용합니다. GROUP BY 절에서도 HAVING 절을 통해 조건식을 추가할 수 있습니다. **HAVING**절은 WHERE 절과 비슷해보이지만 GROUP BY 절과 함께 사용되는 것이 차이점입니다.
+
+### 3-2-1. ORDER BY 절
+
+```sql
+SELECT 열_이름
+    FROM 테이블_이름
+    WHERE 조건식
+    GROUP BY 열_이름
+    HAVING 조건식
+    ORDER BY 열_이름
+    LIMIT 숫자
+```
+
+* ORDER BY 절은 결과가 출력되는 순서를 조절합니다.
+
+```sql
+SELECT 열_이름
+    FROM 테이블_이름
+    ORDER BY 열_이름;
+```
+
+* 기준 열을 오름차순으로 정리하기 위해서는 **ASC**를, 아닌 내림차순으로 정리하기 위해서는 **DESC**를 제일 뒤에 붙여줍니다.
+
+```sql
+SELECT 열_이름
+    FROM 테이블_이름
+    ORDER BY 열_이름 DESC;
+```
+
+* ORDER BY 절도 WHERE절과 함께 사용하여 조건에 맞는 값을 추출해 순서대로 데이터를 확인할 수 있습니다.
+
+```sql
+SELECT 열_이름
+    FROM 테이블_이름
+    WHERE 조건식
+    ORDER BY 열_이름;
+```
+
+* 그런데 종종, 기준 열의 행 값이 같은 데이터가 있을 수 있는데, 이럴 때 또 다른 기준으로 정렬하기 위해서 여러 개의 열이 필요할 때가 있습니다. 이럴 때는 콤마(,)를 통해 원하는 순서에 따라 열을 적어주면 됩니다.
+
+```sql
+SELECT 열_이름
+    WHERE 조건식
+    ORDER BY 첫_번째_열, 두_번째_열;
+```
+
+#### 출력의 개수를 제한: LIMIT
+
+* **LIMIT**는 출력하는 개수를 제한합니다.
+
+```sql
+SELECT 열_이름
+    FROM 테이블_이름
+    LIMIT 제한 개수;
+```
+
+* ORDER BY와 함께 정렬한 후 사용하는 것이 일반적입니다.
+
+* LIMIT 형식은 **LIMIT 시작, 개수**입니다. `LIMIT 3`과 같이 쓸 때는 `LIMIT 0, 3`과 동일한 의미입니다. 즉, 0번째부터 3건이라는 의미입니다.
+
+* LIMIT 시작, 개수는 **LIMIT 개수 OFFSET 시작**이라고 쓰는 것과 동일합니다. 또한 LIMIT는 첫 데이터를 0번으로 설정하고 시작합니다.
+
+#### 중복된 결과를 제거: DISTINCT
+
+* **DISTINCT**는 조회된 결과에서 중복된 데이터를 1개만 남깁니다. 열 이름 앞에 DISTINCT를 써주기만 하면 중복된 데이터를 1개만 남기고 제거합니다.
+
+```sql
+SELECT DISTINCT 열_이름 FROM 테이블_이름;
+```
+
+### 3-2-2. GROUP BY 절
+
+* GROUP BY 절은 말 그대로 그룹으로 묶어주는 역할을 합니다. 집계함수는 주로 GROUP BY 절과 함께 쓰이며, 데이터를 그룹화(grouping)해주는 기능을 합니다.
+
+#### 집계 함수
+
+> * SUM(): 합계를 구합니다.
+> * AVG(): 평균을 구합니다.
+> * MIN(): 최솟갑을 구합니다.
+> * MAX(): 최댓값을 구합니다.
+> * COUNT(): 행의 개수를 셉니다.
+> * COUNT(DISTINCT): 행의 개수를 셉니다(중복은 1개만 인정).
+
+* 각 회원별로 구매한 개수를 합쳐서 출력하기 위해서는 집계함수인 SUM()과 GROUP BY 절을 사용하면 됩니다. 즉, GROUP BY로 회원별로 묶어준 후에 SUM() 함수로 구매한 개수를 합치면 됩니다.
+
+```sql
+SELECT mem_id, SUM(amount) FROM buy GROUP BY mem_id;
+```
+
+* 전체 회원이 구매한 물품 개수의 평균을 구하기 위해서 `SELECT AVG(amount) "평균 구매 개수" FROM buy`를 하고, 그룹별 평균을 위해서는 `SELECT mem_id, AVG(amount) "평균 구매 개수" FROM buy GROUP BY mem_id;`와 같이 표현하는데 GROUP BY의 유무에 따라 달라지는 것을 확인할 수 있습니다.
+
+#### HAVING 절
+
+* SELECT 문에서 WHERE를 통해 조건에 맞는 데이터만 보고 싶은 경우가 있었습니다. 이때 GROUP BY를 사용하는 경우에는 HAVING을 통해 집계함수에 대해서 조건을 제한합니다.
+
+```sql
+SELECT 열_이름
+    FROM 테이블_이름
+        GROUP BY 열_이름
+        HAVING 조건식;
+```
+
+```sql
+SELECT mem_id "회원 아이디", SUM(price*amount) "총 구매 금액"
+	  FROM buy
+        GROUP BY mem_id
+        HAVING SUM(price*amount) > 1000;
+```
+
+## 3-3. 데이터 변경을 위한 SQL문
+
+* 데이터베이스와 테이블을 만든 후에는 데이터를 변경하는, 즉 입력/수정/삭제하는 기능이 필요합니다.
+
+* 새로운 데이터를 테이블에 입력할 때는 **INSERT**, 데이터를 수정할 때는 **UPDATE**, 데이터를 삭제할 때는 **DELETE**문을 사용합니다.
+
+### 3-3-1. 데이터 입력: INSERT
+
+#### INSERT 문의 기본 문법
+
+* INSERT는 테이블에 데이터를 삽입하는 명령입니다. 
+
+```sql
+INSERT INTO 테이블 [(열1, 열2, ...)] VALUES (값1, 값2, ...)
+```
+
+테이블 이름 나음에 나오는 열은 생략이 가능합니다. 생략할 경우 VALUES의 값들이 열 순서 및 개수와 동일해야 합니다.
+
+```sql
+USE market_db;
+CREATE TABLE hongong1 (toy_id INT, toy_name CHAR(4), age INT);
+INSERT INTO hongong1 VALUES (1, '우디', 25);
+```
+
+열의 순서를 바꿔서 입력하거나 원하는 열에만 정보를 입력하고 싶다면 테이블 이름 뒤에 열 이름을 기입하여 SQL을 작성한다.
+
+```sql
+INSERT INTO hongong1 (toy_id, toy_name) VALUES (2, '버즈');
+```
+
+#### 자동으로 증가하는 AUTO_INCREMENT
+
+* AUTO_INCREMENT는 열을 정의할 때 1부터 증가하는 값을 입력해줍니다. 주의할 점은 AUTO_INCREMENT로 지정하는 열은 꼭 **PRIMARY KEY**로 지정해줘야 합니다.
+
+```sql
+CREATE TABLE hongong2 (
+  toy_id INT AUTO_INCREMENT PRIMARY KEY,
+  toy_name CHAR(4),
+  age INT
+);
+```
+
+이제 데이터를 입력할 때, 자동 증가하는 부분은 NULL 값으로 채워 놓으면 됩니다.
+
+* 만약 AUTO_INCREMENT로 입력되는 다음 값을 100부터 시작하도록 변경하고 싶다면 다음과 같이 실행합니다.
+
+```sql
+ALTER TABLE hongong2 AUTO_INCREMENT=100;
+INSERT INTO hongong2 VALUES (NULL, '재남', 35);
+SELECT * FROM hongong2;
+```
+
+ALTER TABLE은 테이블을 변경하라는 의미입니다.  
+  
+혹은 처음부터 입력되는 값을 1000으로 지정하고, 다음 값으로 3씩 증가하도록 설정하는 방법을 살펴보겠습니다.  
+  
+시스템 변수인 `@@auto_increment_increment`를 변경시켜야 합니다.
+
+```sql
+CREATE TABLE hongong3 (
+    toy_id INT AUTO_INCREMENT PRIMARY KEY,
+    toy_name CHAR(4),
+    age INT);
+ALTER TABLE hongong3 AUTO_INCREMENT=1000;
+SET @@auto_increment_increment=3;
+```
+
+* INSERT INTO 문은 1줄로 작성할 수도 있습니다.
+
+```sql
+INSERT INTO 테이블_이름 VALUES (값1, 값2, ...), (값3, 값4, ...);
+```
+
+#### 다른 테이블의 데이터를 한 번에 입력하는 INSERT INTO ~ SELECT
+
+* 다른 테이블에 이미 데이터가 입력되어 있다면 **INSERT INTO ~ SELECT** 구문을 사용해 해당 테이블의 데이터를 가져와서 한 번에 입력할 수 있습니다.
+
+```sql
+INSERT INTO 테이블_이름 (열_이름1, 열_이름2, ...)
+    SELECT 문;
+```
+
+주의할 것은 SELECT 문의 열 개수가 INSERT할 테이블의 열 개수와 같아야 한다는 것입니다.
+
+* DESC는 Describe의 약자로, 테이블 구조를 출력해주는 기능을 합니다.
+
+### 3-3-2. 데이터 수정: UPDATE
+
+* 회원의 정보가 변경되는 경우 UPDATE를 사용해서 내용을 수정합니다.
+
+#### UPDATE 문의 기본 문법
+
+* **UPDATE**는 기존에 입력되어 있는 값을 수정하는 명령입니다.
+
+```sql
+UPDATE 테이블_이름
+    SET 열1=값1, 열2=값2, ...
+    WHERE 조건 ;
+```
+
+```sql
+USE market_db;
+UPDATE city_popul
+	SET city_name = '서울'
+    WHERE city_name = 'Seoul';
+SELECT * FROM city_popul WHERE city_name = '서울';
+```
+
+city_popul이라는 테이블에서 city_name이 'Seoul'인 데이터를 '서울'로 바꿔줍니다(SET).  
+  
+* 필요하면 한꺼번에 여러 열의 값을 변경할 수 있습니다. 콤마(,)로 분리해서 여러 개의 열을 변경하면 됩니다.
+
+```sql
+UPDATE city_popul
+    SET city_name = '뉴욕', population = 0
+    WHERE city_name = 'New York';
+SELECT * FROM city_popul WHERE city_name = '뉴욕';
+```
+
+SET에는 변경할 값을 입력하고, WHERE는 데이터 조건을 두어 원하는 데이터만 바꿀 수 있도록 합니다.
+
+#### WHERE가 없는 UPDATE문
+
+* UPDATE문에서 **WHERE** 절은 문법상 생략이 가능하지만, WHERE 절을 생략하면 테이블의 모든 행의 값이 변경됩니다.
+
+`SET city_name = '서울';`은 WHERE를 사용하지 않으면 모든 데이터의 city_name이 '서울'로 바꿔버릴 것입니다.
+
+* 값을 일괄적으로 바꾸는 경우는 인구의 단위를 10,000명 단위로 바꾸는 등의 과정을 위해 사용하는 경우도 있습니다.
+
+```sql
+UPDATE city_popul
+    SET population = population / 10000;
+SELECT * FROM city_popul LIMIT 5;
+```
+
+## 3-3-3. 데이터 삭제: DELETE
+
+* 데이터를 삭제할 때 **DELETE**를 사용하여 행 데이터를 삭제합니다.
+
+```sql
+DELETE FROM 테이블_이름 WHERE 조건;
+```
+
+```sql
+DELETE FROM city_popul
+    WHERE city_name LIKE 'New%';
+```
+
+WHERE 조건을 만족하는 모든 데이터를 삭제하고 싶은 것이 아니라, 상위 몇 건만 삭제하려면 LIMIT를 사용합니다.
+
+## 3-3-4. 대용량 테이블의 삭제
+
+* 대용량 테이블을 `DELETE`, `DROP`, `TRUNCATE`라는 3가지 방법으로 삭제하는 방법이 있습니다.
+
+* DELETE문은 삭제가 오래 걸립니다. DROP 문은 데이터 자체를 삭제합니다. TRUNCATE 문도 DELETE와 동일한 효과를 내지만 속도가 무척 빠릅니다. DROP과 달리 빈 테이블을 남깁니다.
+
+```sql
+DELETE FROM 테이블_이름;
+DROP TABLE 테이블_이름;
+TRUNCATE TABLE 테이블_이름;
+```
