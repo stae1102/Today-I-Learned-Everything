@@ -8,6 +8,7 @@ All of  the summary that I learned today
 - [HTML & CSS & JavaScript](#html--css--javascript)
 - [Git & GitHub](#git--github)
 - [JavaScript](#javascript)
+- [Database](#database)
 
 
 # HTML & CSS & JavaScript
@@ -21,5 +22,9 @@ All of  the summary that I learned today
 
 # JavaScript
 - [JavaScript](JavaScript/Do%20it!%20자바스크립트%20입문.md)
-  - [Chapter 2. 자바스크립트와 친해지기](JavaScript/Do%20it!%20자바스크립트%20입문.md/#chapter-2-자바스크립트와-친해지기)
-  - [Chapter 3. 변수와 자료형 그리고 연산자](JavaScript/Do%20it!%20자바스크립트%20입문.md/#chapter-3-변수와-자료형-그리고-연산자)
+  - [입력과 출력](JavaScript/입력과%20출력.md)
+  - [자바스크립트 소스 작성 규칙](JavaScript/자바스크립트%20소스%20작성%20규칙.md)
+  - [변수와 자료형, 연산자](JavaScript/변수와%20자료형,%20연산자.md)
+
+# Database
+- [MySQL](Database/MySQL/MySQL.md)
