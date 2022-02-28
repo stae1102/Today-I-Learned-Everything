@@ -864,8 +864,8 @@ UPDATE 테이블_이름
 ```sql
 USE market_db;
 UPDATE city_popul
-	  SET city_name = '서울'
-    WHERE city_name = 'Seoul';
+  SET city_name = '서울'
+  WHERE city_name = 'Seoul';
 SELECT * FROM city_popul WHERE city_name = '서울';
 ```
 
