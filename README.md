@@ -26,6 +26,9 @@ All of  the summary that I learned today
   - [입력과 출력](JavaScript/입력과%20출력.md)
   - [자바스크립트 소스 작성 규칙](JavaScript/자바스크립트%20소스%20작성%20규칙.md)
   - [변수와 자료형, 연산자](JavaScript/변수와%20자료형,%20연산자.md)
+  - [제어문](JavaScript/제어문.md)
+  - [함수와 이벤트](JavaScript/함수와%20이벤트.md)
+  - [객체](JavaScript/객체.md)
 
 # Database
 - [MySQL](Database/MySQL/MySQL.md)
