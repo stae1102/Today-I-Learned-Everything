@@ -29,6 +29,7 @@ All of  the summary that I learned today
   - [제어문](JavaScript/제어문.md)
   - [함수와 이벤트](JavaScript/함수와%20이벤트.md)
   - [객체](JavaScript/객체.md)
+  - [Array 객체](JavaScript/Array%20객체.md)
 
 # Database
 - [MySQL](Database/MySQL/MySQL.md)
