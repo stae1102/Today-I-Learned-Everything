@@ -155,6 +155,42 @@
       - [인수가 2개일 경우](#인수가-2개일-경우)
       - [인수가 3개 이상일 경우](#인수가-3개-이상일-경우)
     - [원하는 위치의 요소들을 추출하는 `slice()` 함수](#원하는-위치의-요소들을-추출하는-slice-함수)
+- [Chapter 8. 웹 문서를 다루는 방법, 문서 객체 모델(DOM)](#chapter-8-웹-문서를-다루는-방법-문서-객체-모델dom)
+  - [8-1. 문서 객체 모델이란?](#8-1-문서-객체-모델이란)
+    - [문서 객체 모델의 정의](#문서-객체-모델의-정의)
+    - [DOM 트리](#dom-트리)
+    - [DOM 트리 자세히 살펴보기](#dom-트리-자세히-살펴보기)
+  - [8-2. DOM 요소에 접근하기](#8-2-dom-요소에-접근하기)
+      - [DOM 요소를 id 선택자로 접근하는 함수 - getElementById()](#dom-요소를-id-선택자로-접근하는-함수---getelementbyid)
+      - [DOM 요소를 class 값으로 찾아내는 함수 - getElementsByClassName()](#dom-요소를-class-값으로-찾아내는-함수---getelementsbyclassname)
+      - [DOM 요소를 태그 이름으로 찾아내는 함수 - getElementsByTagName()](#dom-요소를-태그-이름으로-찾아내는-함수---getelementsbytagname)
+      - [DOM 요소를 다양한 방법으로 찾아주는 함수 - querySelector(), querySelectorAll()](#dom-요소를-다양한-방법으로-찾아주는-함수---queryselector-queryselectorall)
+      - [getElementById()함수와 querySelector() 함수의 차이](#getelementbyid함수와-queryselector-함수의-차이)
+  - [8-3. 웹 요소의 태그 속성 가져와서 수정하기](#8-3-웹-요소의-태그-속성-가져와서-수정하기)
+    - [HTML 태그 속성을 가져오거나 수정하는 함수 - getAttribute(), setAttribute()](#html-태그-속성을-가져오거나-수정하는-함수---getattribute-setattribute)
+  - [8-4. DOM에서 이벤트 처리하기](#8-4-dom에서-이벤트-처리하기)
+    - [이벤트 처리 방법 복습하기](#이벤트-처리-방법-복습하기)
+      - [HTML 태그 안에서 이벤트 처리기 연결하기](#html-태그-안에서-이벤트-처리기-연결하기)
+      - [DOM 요소에 이벤트 처리기 연결하기](#dom-요소에-이벤트-처리기-연결하기)
+      - [addEventListener() 함수로 여러 이벤트를 한 번에 처리하기](#addeventlistener-함수로-여러-이벤트를-한-번에-처리하기)
+  - [8-5. 웹 요소의 스타일 가져와서 수정하기](#8-5-웹-요소의-스타일-가져와서-수정하기)
+    - [DOM으로 CSS 속성에 접근하고 수정하기](#dom으로-css-속성에-접근하고-수정하기)
+      - [텍스트 색상 바꾸기](#텍스트-색상-바꾸기)
+      - [웹 요소를 화면에 표시하기/감추기](#웹-요소를-화면에-표시하기감추기)
+  - [8-6. DOM에 요소 추가하기](#8-6-dom에-요소-추가하기)
+    - [DOM에 새로운 노드를 추가하는 방법](#dom에-새로운-노드를-추가하는-방법)
+    - [웹 문서에 새로운 노드 추가하기](#웹-문서에-새로운-노드-추가하기)
+      - [요소 노드 만들기 - createElement() 함수](#요소-노드-만들기---createelement-함수)
+      - [텍스트 노드 만들기 - createTextNode() 함수](#텍스트-노드-만들기---createtextnode-함수)
+      - [자식 노드로 추가하기 - appendChild() 함수](#자식-노드로-추가하기---appendchild-함수)
+      - [속성 노드 만들기 - createAttribute() 함수](#속성-노드-만들기---createattribute-함수)
+      - [속성 노드 연결하기 - setAttributeNode() 함수](#속성-노드-연결하기---setattributenode-함수)
+  - [8-7. 추가한 노드 순서 바꾸거나 삭제하기](#8-7-추가한-노드-순서-바꾸거나-삭제하기)
+    - [DOM 트리를 활용해 원하는 노드 다루기](#dom-트리를-활용해-원하는-노드-다루기)
+      - [자식 노드 확인하기 - hasChildNodes() 함수](#자식-노드-확인하기---haschildnodes-함수)
+      - [자식 노드에 접근하기 - childNodes 속성](#자식-노드에-접근하기---childnodes-속성)
+      - [원하는 위치에 노드 삽입하기 - insertBefore() 함수](#원하는-위치에-노드-삽입하기---insertbefore-함수)
+      - [특정 노드 삭제하기 - removeChild() 함수와 parentNode 속성](#특정-노드-삭제하기---removechild-함수와-parentnode-속성)
 
 # Chapter 2. 자바스크립트와 친해지기
 
@@ -1925,4 +1961,367 @@ colors2
 ▶ (3) ['green', 'blue', 'white']
 colors
 ▶ (5) ['red', 'green', 'blue', 'white', 'black']
+```
+
+# Chapter 8. 웹 문서를 다루는 방법, 문서 객체 모델(DOM)
+
+자바스크립트를 사용해 웹 문서의 텍스트나 이미지 등의 요소를 제어하기 위해서는 문서 객체 모델(Document Object Model)을 이해해야 합니다.
+
+## 8-1. 문서 객체 모델이란?
+
+### 문서 객체 모델의 정의
+
+* DOM의 정의: 웹 문서의 모든 요소를 자바스크립트를 이용하여 조작할 수 있도록 객체를 사용해 문서를 해석하는 방법.
+
+* document는 웹 문서의 소스가 그대로 들어있으며 수많은 DOM 요소 중 하나입니다.
+
+### DOM 트리
+
+DOM은 웹 문서의 요소를 부모 요소와 자식 요소로 구분합니다.
+
+```html
+<body>
+    <h1>제목</h1>
+    <p>본문</p>
+</body>
+```
+
+DOM은 body를 h1, p의 부모 요소로, h1, p를 body의 자식 요소로 이해하고 구조화합니다.  
+
+DOM 트리는 가지와 노드로 표현합니다. 노드(Node)는 그림에서 네모 상자를 가리키고, 웹 문서에 있는 요소나 속성을 나타냅니다. 가지는 노드와 노드를 잇는 연결 관계를 나타냅니다. 또한, HTML의 요소가 품고 있는 텍스트, 이미지도 자식으로 간주하여 DOM 트리에 표현합니다.  
+
+DOM 트리는 웹 문서 요소를 다음과 같이 표현합니다.
+
+* 웹 문서의 태그는 요소(Element) 노드로 표현합니다.
+* 태그가 품고 있는 텍스트는 해당 요소 노드(태그)의 자식인 텍스트(Text) 노드로 표현합니다.
+* 태그의 속성은 모두 해당 요소 노드(태그)의 자식 노드인 속성(Attribute) 노드로 표현합니다.
+* 주석은 주석(Comment) 노드로 표현합니다.
+
+### DOM 트리 자세히 살펴보기
+
+![DOMTREE](DOM%20TREE.png)  
+  
+맨 위에 있는 html 노드는 요소 노드(Element Node)이면서 다른 요소 노드가 뻗어 나가기 시작하는 노드이기도 합니다. 이를 루트 노드(Root Node)라고 부릅니다.
+
+## 8-2. DOM 요소에 접근하기
+
+자바스크립트로 프로그램에 사용할 요소에 접근하는 것을 **'DOM 요소에 접근한다'** 고 이야기합니다.
+
+#### DOM 요소를 id 선택자로 접근하는 함수 - getElementById()
+
+id 선택자를 사용하여 DOM 요소에 접근하는 함수가 바로 getElementById() 함수입니다.
+
+```js
+document.getElementById("heading")
+    <h1 id="heading">에디오피아 게뎁</h1>
+```
+
+활용 ↓
+
+```js
+document.getElementById("heading").onclick = function() {
+    this.style.fontSize = '5em';
+}
+```
+위 소스를 작성한 후 heading을 id로 가지는 요소를 클릭하면 폰트 사이즈가 변경된다.
+
+#### DOM 요소를 class 값으로 찾아내는 함수 - getElementsByClassName()
+
+class 속성값을 사용하여 DOM 요소에 접근하려면 getElementsByClassName() 함수를 사용합니다. class는 여러 개를 사용할 수 있기 때문에 Element**s**임을 기억합시다.
+
+```js
+document.getElementsByClassName("accent")[0].style.textDecoration = "underline";
+document.getElementsByClassName("accent")[1].style.textDecoration = "underline";
+```
+
+#### DOM 요소를 태그 이름으로 찾아내는 함수 - getElementsByTagName()
+
+id나 class 선택자가 없는 DOM 요소는 getElementsByTagName() 함수를 사용하여 태그 이름을 찾아 DOM 요소에 접근하면 됩니다.
+
+```js
+document.getElementsByTagName('h2')[0].style.backgroundColor = "#eee"
+```
+
+#### DOM 요소를 다양한 방법으로 찾아주는 함수 - querySelector(), querySelectorAll()
+
+id, class 값을 사용해도 되고 태그 이름을 사용해도 되는 querySelector() 함수와 querySelectorAll() 함수가 있습니다.  
+
+id를 선택할 때는 id값 앞에 샵(#)을 붙이고, class값 앞에는 마침표(.)를 붙입니다. 태그는 기호 없이 태그 이름만 입력하면 됩니다.
+
+```js
+document.querySelector("#heading")
+```
+
+그런데 querySelectorAll() 함수를 사용해 요소를 탐색하면 getElementsByClassName() 함수와는 다르게 NodeList를 반환합니다.
+
+```js
+document.querySelectorAll(".accent");
+▶ NodeList(2) [span.accent, span.accent]
+document.getElementsByClassName("accent");
+▶ HTMLCollection(2) [span.accent, span.accent]
+```
+
+NodeList는 HTMLCollection과 같은 방법으로 다룰 수 있습니다. 즉, NodeList는 여러 개의 노드를 모아 놓은 것으로 배열과 비슷하다고 생각하면 됩니다.
+
+```js
+document.querySelectorAll(".accent")[1].style.backgroundColor = "yellow";
+"yellow"
+```
+
+#### getElementById()함수와 querySelector() 함수의 차이
+
+getElementById() 함수는 단순히 id 선택자를 사용해서 요소에 접근하지만 querySelector()를 사용하면 id선택자뿐만 아니라 둘 이상의 선택자를 사용해서 요소에 접근할 수 있습니다.
+
+## 8-3. 웹 요소의 태그 속성 가져와서 수정하기
+
+### HTML 태그 속성을 가져오거나 수정하는 함수 - getAttribute(), setAttribute()
+
+```js
+document.querySelector("#prod-img > img").getAttribute("src");
+'images/coffee-pink.jpg'
+```
+
+위를 통해 태그가 가지고 있는 속성을 추출해낼 수 있습니다. HTML 태그의 속성 값을 바꾸기 위해서는 **setAttribute()** 함수를 사용하고, 괄호 안에 속성 이름과 속성 값을 넣으면 됩니다. 이때 지정한 속성이 아직 없다면 새로 속성과 속성 값을 추가하고, 지정한 속성이 있다면 괄호 안에 넣은 속성 값으로 수정합니다.
+
+```js
+document.querySelector("#prod-img > img").setAttribute("src", "images/coffee-blue.jpg")
+```
+
+## 8-4. DOM에서 이벤트 처리하기
+
+### 이벤트 처리 방법 복습하기
+
+#### HTML 태그 안에서 이벤트 처리기 연결하기
+
+이벤트가 발생하는 HTML 태그 안에 직접 이벤트 처리기를 추가하는 방법입니다. 예를 들어 img 태그에 onclick을 사용하여 이미지를 클릭했을 때 이벤트를 실행하는 방법입니다.
+
+```js
+<img onclick="changePic()"> // 사전에 만들어둔 함수
+```
+
+이 방법은 HTML에 자바스크립트 소스를 섞은 형태이기 때문에 이벤트를 바꾼다거나 연결 함수를 바꾸기 위해서는 HTML 소스를 수정해야 합니다. 또한 하나의 요소에 하나의 이벤트 처리기만 사용할 수 있습니다.
+
+#### DOM 요소에 이벤트 처리기 연결하기
+
+이벤트 처리기를 자바스크립트 소스에서 실행합니다. 이미지 요소를 가져와 pic 변수에 저장한 후 click 이벤트가 발생했을 때 changePic() 함수를 실행합니다.  
+
+```js
+var pic = document.querySelector('#pic');
+pic.onclick = changePic; // pic 요소를 클릭하면 changePic() 함수 실행
+```
+
+DOM 요소에 이벤트 처리기를 연결하는 방법은 HTML 태그와 뒤섞이지 않고 자바스크립트 소스를 사용한다는 점에서는 좋지만, 역시 하나의 요소에 하나의 이벤트 처리기만 사용할 수 있습니다.
+
+#### addEventListener() 함수로 여러 이벤트를 한 번에 처리하기
+
+한 요소에 여러 이벤트가 발생했을 때 이를 동시에 처리하기 위해서 DOM의 addEventListener() 함수를 사용하면 됩니다.
+
+```js
+var pic = document.querySelector('#pic');
+pic.addEventListener("mouseover", changePic, false);
+
+function changePic() {			
+    pic.src = "images/boy.png";
+}
+function originPic() {
+    pic.src = "images/girl.png";
+}
+```
+
+addEventListener()의 **첫 번째 인수**는 **처리할 이벤트 유형**을 지정합니다. **두 번째 인수**는 이벤트가 발생했을 때 **실행할 명령**을 나열합니다. **세 번째 인수**는 **이벤트를 캡처링하는지 여부**를 지정하는데 생략할 수 있습니다. true면 캡처링, false이면 버블링한다는 의미힌데, 기본값은 false입니다. 이벤트 캡처링은 **DOM의 부모 노드에서 자식 노드로 이벤트가 전달되는 것**이고, 이벤트 버블링은 **DOM의 자식 노드에서 부모 노드로 이벤트가 전달되는 것**입니다.
+
+pic 변수에 addEventListener() 함수를 추가하여 마우스가 벗어나면 다시 원래 이미지로 되돌아가는 이벤트를 수행할 수 있습니다. 두 이벤트가 한 요소에서 처리되는 것입니다.
+
+```js
+var pic = document.querySelector('#pic');
+pic.addEventListener("mouseover", changePic, false);
+pic.addEventListener("mouseout", originPic, false);
+document.addEventListener("click", function() {alert('안녕하세요?')}, false);
+
+function changePic() {			
+    pic.src = "images/boy.png";
+}
+function originPic() {
+    pic.src = "images/girl.png";
+}
+```
+
+## 8-5. 웹 요소의 스타일 가져와서 수정하기
+
+### DOM으로 CSS 속성에 접근하고 수정하기
+
+자바스크립트로 특정 웹 요소에 접근하는 방법으로 CSS 속성에 접근할 수 있고 수정도 가능합니다.
+
+#### 텍스트 색상 바꾸기
+
+제목 텍스트의 id 가 heading일 때 웹 요소의 스타일 속성에 접근할 때는 요소 다음에 .style 예약어를 쓰고 그 다음에 CSS 속성을 적습니다.
+
+```js
+document.getElementById('heading').style.color = 'red';
+```
+
+background-color나 border-radius처럼 가운데 하이픈(-)이 포함된 속성은 **backgroundColor**나 **borderRadius**처럼 두 단어를 합치고 두 번째 단어의 첫 글자를 대문자로 쓰는 낙타 표기법으로 입력합니다.
+
+```js
+document.querySelector('#heading').style.backgroundColor = 'gray';
+```
+
+#### 웹 요소를 화면에 표시하기/감추기
+
+웹 문서에서 무엇인가 화면에 표시하거나 감추려면 CSS 속성 중 **display 속성**이나 **visibility 속성**을 사용합니다.
+
+* **display: none**을 사용해서 웹 요소를 화면에서 감추면 **그 요소가 차지하던 공간도 사라지지만**, **visibility: hidden**을 사용해서 웹 요소를 감추면 **요소가 있던 공간은 빈 상태로 남아 있게 된다**는 점이 큰 차이입니다.
+
+## 8-6. DOM에 요소 추가하기
+
+### DOM에 새로운 노드를 추가하는 방법
+
+* 모든 HTML 태그는 '요소(Element) 노드'로 표현합니다.
+* HTML 태그에서 사용하는 텍스트 내용은 '텍스트(Text) 노드'로 표현합니다.
+* HTML 태그에 있는 속성은 모두 '속성(Attribute) 노드'로 표현합니다.
+* 주석은 '주석(Comment) 노드'로 표현합니다.
+
+웹 문서에 있는 요소는 단순히 태그만 있는 게 아니라 태그 속성과 내용을 함께 사용합니다. 그래서 `<h1>`이나 `<p>` 태그를 추가하고 싶다면 태그에 해당하는 요소 노드뿐만 아니라 태그 안에 있는 텍스트 내용과 속성도 노드로 추가해야 합니다.  
+
+현재 문서의 DOM 트리에 새로운 노드를 추가하려면 **웹 문서에 어떤 소스를 추가할지 먼저 생각해야 합니다**. 그러고 나서 그 소스에 따라 요소 노드나 텍스트 노드, 속성 노드 등을 만들고 연결합니다. 예를 들어 웹 문서에 텍스트를 추가한다고 가정해 보겠습니다.
+
+```js
+<p class="accent">주문이 완료되었습니다.</p>
+```
+
+이 소스를 DOM 트리에 추가하려면 p 요소 노드와 "accent" 속성 값을 넣을 class 속성 노드, '주문이 완료되었습니다.'라는 텍스트를 넣을 텍스트 노드가 필요합니다. 그리고 이렇게 만든 노드를 부모 노드에 연결해서 웹 문서에 추가합니다.  
+
+새로운 노드를 만들거나 부모 노드에 연결할 때는 다음 함수를 사용합니다.
+
+* createElement(): 새 요소 노드를 만듭니다.
+* createTextNode(): 텍스트 내용이 있을 경우 텍스트 노드를 만듭니다.
+* appendChild(): 텍스트 노드를 요소 노드에 자식 노드로 추가합니다.
+* createAttribute(): 요소에 속성이 있을 경우 속성 노드를 만듭니다.
+* setAttributeNode(): 속성 노드를 요소 노드에 연결합니다.
+* appendChild(): 새로 만든 요소 노드를 부모 노드에 추가합니다.
+
+### 웹 문서에 새로운 노드 추가하기
+
+body 태그에 아무 소스도 없는 문서에 텍스트 단락을 추가하겠습니다. `<p>` 태그와 class 속성, 그리고 '주문이 완료되었습니다.'라는 내용을 추가해보겠습니다.
+
+```js
+<p class="accent">주문이 완료되었습니다.</p>
+```
+
+#### 요소 노드 만들기 - createElement() 함수
+
+DOM에 새로운 요소를 추가할 때 가장 먼저 할 일은 요소 노드를 만드는 것입니다. 새로운 요소 노드를 만드는 함수는 createElement() 인데, 괄호 안의 요소에 해당하는 요소 노드를 적습니다. 콘솔 창에서 다음 소스를 입력해 새로운 p 요소를 만들고 newP 변수에 저장합니다.
+
+```js
+var newP = document.createElement("p");
+```
+
+#### 텍스트 노드 만들기 - createTextNode() 함수
+
+새 요소 노드를 만든 후에는 요소에서 표시할 내용(주문이 완료되었습니다.)을 텍스트 노드로 만듭니다. 텍스트 노드를 만드는 함수는 createTextNode()이고 괄호 안에 내용을 입력합니다. 콘솔 창에 다음 소스를 입력해 텍스트 노드를 만들어 newText 변수에 저장합니다.
+
+```js
+var newText = document.createTextNode("주문이 완료되었습니다.");
+```
+
+#### 자식 노드로 추가하기 - appendChild() 함수
+
+앞에서 새로운 `<p>` 노드와 거기에 사용할 텍스트 노드를 만들었습니다. 아직까지는 노드가 만들어지기만 하고 서로 부모 노드와 자식 노드로 연결되지 않은 상태입니다. appendChild() 함수는 텍스트 노드를 요소 노드의 자식 노드로 연결하거나 요소 노드를 다른 요소 노드의 자식 노드로 연결할 때 사용하는 함수입니다. 이 함수로 텍스트 노드 newText를 newP 노드의 자식 노드로 축가하는 소스를 콘솔 창에 작성합니다.
+
+```js
+newP.appendChild(newText)
+```
+
+새로 만든 `<p>` 태그 소스는 웹 문서의 `<body>` 태그 안에 추가해야 하므로 newP노드를 body 노드의 자식 노드로 추가합니다.
+
+```js
+document.body.appendChild(newP)
+```
+
+#### 속성 노드 만들기 - createAttribute() 함수
+
+콘솔 창에서 추가한 `<p>` 태그에 class="accent" 속성을 추가해 보겠습니다. 새로운 속성 노드를 만들 때는 createAttribute() 함수를 사용하여 함수의 괄호 안에 추가할 속성 이름을 지정합니다. 여기에서는 새로운 class 속성 노드를 만들어 변수 attr에 저장합니다. 그리고 attr.value를 사용해 attr 속성 값을 "accent"로 지정합니다.
+
+```js
+var attr = document.createAttribute("class");
+attr.value = "accent";
+"accent"
+```
+
+#### 속성 노드 연결하기 - setAttributeNode() 함수
+
+속성 노드를 만들었으면 앞에서 선언해 놓은 p 노드에 연결해야 합니다. 속성 노드를 요소 노드에 연결할 때는 setAttributeNode() 함수를 사용합니다.
+
+```js
+newP.setAttributeNode(attr);
+null
+```
+
+혹은 `setAttribute("class", "accent")`로 사용할 수도 있습니다.
+
+## 8-7. 추가한 노드 순서 바꾸거나 삭제하기
+
+### DOM 트리를 활용해 원하는 노드 다루기
+
+DOM 트리는 여러 노드가 부모 노드와 자식 노드 혹은 형제 노드라는 관계를 유지하며 구성되어 있습니다. 이제부터 이 관계를 사용해 원하는 노드에 접근하는 것부터 내용을 수정·삭제하는 방법까지 알아보겠습니다.
+
+#### 자식 노드 확인하기 - hasChildNodes() 함수
+
+hasChildNodes() 함수는 특정 노드에 자식 노드가 있는지 확인하는 함수입니다. 자식 노드가 있다면 true를, 그렇지 않다면 false를 반환합니다.
+
+```js
+document.querySelectorAll('p')[0].hasChildNodes()
+true
+```
+
+#### 자식 노드에 접근하기 - childNodes 속성
+
+자식 노드가 있다면 childNodes 속성을 사용해서 현재 노드의 자식 노등 접근할 수 있습니다. 이때 요소 노드 뿐만 아니라 태그와 태그 사이의 줄바꿈도 빈 텍스트 노드인 자식 노드로 인식합니다.
+
+```js
+<div id="nameList">
+    <p>홍길동 <span class="del">X</span></p>
+    <p>백두산 <span class="del">X</span></p>
+    <p>도레미 <span class="del">X</span></p>
+</div>
+```
+
+위와 같은 소스가 있다고 할 때 다음과 같이 자식노드를 확인한다.
+
+```js
+document.querySelector("#nameList").childNodes
+▶ NodeList(7) [text, p, text, p, text, p, text]
+```
+
+빈 텍스트 노드도 자식 노드로 인식하기에 총 7개의 노드가 있습니다.
+
+**요소에만 접근하려면 children 속성을 사용합니다.**
+
+#### 원하는 위치에 노드 삽입하기 - insertBefore() 함수
+
+자식 노드를 추가하는 appendChild() 함수는 부모 노드에 자식 노드가 있을 경우 마지막 노드로 추가됩니다. 하지만 insertBefore() 함수를 사용하면 부모 노드에 자식 노드를 추가할 때 기준이 되는 노드를 지정하고 그 앞에 자식 노드를 추가할 수 있습니다.  
+
+insertBefore() 함수를 사용해서 이름 순서를 바꿔봅니다. 먼저 부모 노드를 저장합니다.
+
+```js
+var nameList = document.querySelector("#nameList")
+```
+
+콘솔창에서 insertBefore() 함수를 사용해 다음과 같이 입력합니다. insertBefore() 함수에서는 2개의 인수를 사용하는데, **첫 번째 인수는 추가하는 노드, 두 번째 인수는 기준이 되는 노드**입니다. 다음 소스에서 기준이 되는 노드는 nameList의 첫 번째 자식 노드이고, 삽입할 노드는 nameList의 세 번째 자식 노드입니다. 즉, 세 번째 자식 노드를 첫 번째 자식 노드 앞에 추가하는 것입니다.
+
+```js
+nameList.insertBefore(nameList.children[2], nameList.children[0])
+```
+
+#### 특정 노드 삭제하기 - removeChild() 함수와 parentNode 속성
+
+DOM 트리에 있는 노드를 삭제할 때는 removeChild() 함수를 사용합니다. 함수 이름에서 알 수 있듯이 부모 노드에서 자식 노드를 삭제하는 함수이고, 괄호 안에는 삭제하려는 자식 노드가 들어갑니다.  
+
+노드는 스스로 자신을 삭제할 수 없기 때문에 부모 노드에 접근한 후 부모 노드에서 삭제해야 합니다. **특정 노드를 삭제하기 위해선 부모 노드를 먼저 찾아야 하는데, 부모 노드 정보를 가지고 있는 속성이 parentNode 속성입니다. parentNode 속성은 현재 노드의 부모 요소 노드를 반환합니다.
+
+```js
+var firstDel = document.querySelectorAll('.del')[0] // 첫 번째 X
+var firstP = document.querySelectorAll('p')[0] // 첫 번째 p 요소
+firstP.removeChild(firstDel) // 첫 번째 p 요소에 있는 첫 번째 X 삭제
+<span class=​"del">​X​</span>​
 ```
