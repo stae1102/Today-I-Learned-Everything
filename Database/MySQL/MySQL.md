@@ -89,6 +89,19 @@
       - [함수를 이용한 명시적인 변환](#함수를-이용한-명시적인-변환)
       - [암시적인 변환](#암시적인-변환)
   - [4-2. 두 테이블을 묶는 조인](#4-2-두-테이블을-묶는-조인)
+    - [4-2-1. 내부 조인](#4-2-1-내부-조인)
+      - [일대다 관계의 이해](#일대다-관계의-이해)
+      - [내부 조인의 기본](#내부-조인의-기본)
+      - [내부 조인의 간결한 표현](#내부-조인의-간결한-표현)
+      - [내부 조인의 활용](#내부-조인의-활용)
+      - [중복된 결과 1개만 출력하기](#중복된-결과-1개만-출력하기)
+    - [4-2-2. 외부 조인](#4-2-2-외부-조인)
+      - [외부 조인의 기본](#외부-조인의-기본)
+      - [외부 조인의 활용](#외부-조인의-활용)
+    - [4-2-3. 기타 조인](#4-2-3-기타-조인)
+      - [상호 조인](#상호-조인)
+      - [자체 조인](#자체-조인)
+  - [4-3. SQL 프로그래밍](#4-3-sql-프로그래밍)
 
 # Chapter 1. 데이터베이스와 SQL
 
@@ -1079,3 +1092,161 @@ SELECT '100' + '200' ;
 ## 4-2. 두 테이블을 묶는 조인
 
 * 조인(join)이란 두 개의 테이블을 서로 묶어서 하나의 결과를 만들어 내는 것을 말합니다.
+
+### 4-2-1. 내부 조인
+
+#### 일대다 관계의 이해
+
+두 테이블의 조인을 위해서는 테이블이 **일대다(one to many)** 관계로 연결되어야 합니다. 데이터베이스의 테이블은 여러 정보를 주제에 따라 분리해서 저장하는 것이 효율적입니다. 이 분리된 테이블은 서로 **관계**를 갖고 있습니다.  
+
+일대다 관계란 한쪽 테이블에는 하나의 값만 존재해야 하지만, 연결된 다른 테이블에는 여러 개의 값이 존재할 수 있는 관계를 말합니다. 일대다 관계에서 주로 '일'의 데이터를 갖는 테이블에서 식별할 열을 **기본 키(Primary Key, PK)** '다'의 테이블에서 기본 키에 상응하는 열을 **외래 키(Foreign Key, FK)**라고 합니다.
+
+#### 내부 조인의 기본
+
+대부분의 조인은 2개로 조인합니다. 기본적인 형식은 다음과 같습니다.
+
+```sql
+SELECT <열 목록>
+FROM <첫 번째 테이블>
+  INNER JOIN <두 번째 테이블>
+  ON <조인될 조건>
+[WHERE 검색 조건]
+```
+
+본 교재에서 사용한 sql문입니다.
+
+```sql
+USE market_db;
+SELECT *
+	FROM buy
+    INNER JOIN member
+    ON buy.mem_id = member.mem_id
+WHERE buy.mem_id = 'GRL';
+```
+
+첫 번째 테이블은 buy 테이블이며, 두 번째 테이블은 member 테이블입니다. 조인될 조건은 buy 테이블과 member 테이블의 mem_id가 같은 조건일 때이며, buy.mem_id 가 'GRL'인 것만 추출해서 보겠다는 의미입니다.
+
+#### 내부 조인의 간결한 표현
+
+```sql
+SELECT mem_id, mem_name, prod_name, addr, CONCAT(phone1, phone2) '연락처'
+	FROM buy
+		INNER JOIN member
+        ON buy.mem_id = member.mem_id;
+```
+이렇게 표현할 시 **mem_id**가 어느 테이블의 열인지 명확하지 않기 때문에 **테이블_이름.열_이름**으로 표기합니다.
+
+하지만 모든 열을 테이블_이름.열_이름으로 하는 것은 코드도 길어지고 가독성도 떨어지게 됩니다. 이를 간결하게 하기 위해 FROM 절에 나오는 테이블의 이름 뒤에 **별칭**을 부여합니다.
+
+```sql
+SELECT B.mem_id, M.mem_name, B.prod_name, M.addr, CONCAT(M.phone1, M.phone2) '연락처'
+	FROM buy B
+		INNER JOIN member M
+        ON B.mem_id = M.mem_id;
+```
+
+#### 내부 조인의 활용
+
+내부 조인을 사용하면 두 테이블에 모두 있는 내용만 조인되는 방식입니다. 만약, **양쪽 중에 한곳이라도 내용이 있을 때 조인**하려면 **외부조인**을 사용해야 합니다.
+
+#### 중복된 결과 1개만 출력하기
+
+앞서 배운 DISTINCT 문을 사용해 출력되는 데이터를 중복 없이 확인할 수 있습니다.
+
+```sql
+SELECT DISTINCT M.mem_id, M.mem_name, M.addr
+	FROM buy B
+		INNER JOIN member M
+        ON B.mem_id = M.mem_id
+	ORDER BY M.mem_id;
+```
+
+### 4-2-2. 외부 조인
+
+* 내부 조인은 두 테이블에 모두 데이터가 있어야만 결과가 나옵니다. 이와 달리 외부 조인은 한 쪽에만 데이터가 있어도 결과가 나옵니다.
+
+#### 외부 조인의 기본
+
+외부 조인은 두 테이블을 조인할 때 필요한 내용이 한 테이블에만 있어도 결과를 추출할 수 있습니다.
+
+```sql
+SELECT <열 목록>
+FROM <첫 번째 테이블(LEFT 테이블)>
+  <LEFT | RIGHT | FULL> OUTER JOIN <두 번째 테이블(RIGHT 테이블)>
+  ON <조인될 조건>
+[WHERE 검색 조건];
+```
+
+```sql
+SELECT M.mem_id, M.mem_name, B.prod_name, M.addr
+	FROM member M
+		LEFT OUTER JOIN buy B
+        ON M.mem_id = B.mem_id
+	ORDER BY M.mem_id;
+```
+
+LEFT OUTER JOIN 문의 의미를 '왼쪽 테이블(member)의 내용은 모두 출력되어야 한다' 정도로 해석하면 기억하기 쉽습니다.
+
+RIGHT OUTER JOIN으로 동일한 결과를 출력하고자 한다면 다음과 같이 작성할 수 있습니다.
+
+```sql
+SELECT M.mem_id, M.mem_name, B.prod_name, M.addr
+	FROM buy B
+		RIGHT OUTER JOIN member M
+        ON M.mem_id = B.mem_id
+	ORDER BY M.mem_id;
+```
+이것은 JOIN의 기준이 member로 동일하기 때문입니다.
+
+#### 외부 조인의 활용
+
+외부 조인을 통해 NULL 값을 추출해낼 수도 있습니다. 쇼핑몰 데이터베이스에서 한 번도 구매하지 않은 고객을 찾아내는 등에 응용할 수 있습니다.
+
+```sql
+SELECT M.mem_id, M.mem_name, B.prod_name, M.addr
+	FROM member M
+		LEFT OUTER JOIN buy B
+        ON M.mem_id = B.mem_id
+	WHERE B.prod_name IS NULL
+    ORDER BY M.mem_id;
+```
+
+**FULL OUTER JOIN**은 왼쪽 외부 조인과 오른쪽 외부 조인이 합쳐진 것이라고 생각하면 됩니다.
+
+### 4-2-3. 기타 조인
+
+#### 상호 조인
+
+**상호 조인**은 한쪽 테이블의 모든 행과 다른 쪽 테이블의 모든 행을 조인시키는 기능을 말합니다. 그래서 **상호 조인 결과의 전체 행 개수는 두 테이블의 각 행의 개수를 곱한 개수**가 됩니다.
+
+```sql
+SELECT *
+	FROM buy
+		CROSS JOIN member;
+```
+
+* ON 구문을 사용할 수 없습니다.
+* 결과의 내용은 의미가 없습니다. 랜덤으로 조인하기 때문입니다(서로 의미 없는 데이터끼리 조인되곤 합니다).
+* 상호 조인의 주 용도는 테스트하기 위해 대용량의 데티어를 생성할 때입니다.
+
+#### 자체 조인
+
+자체 조인은 자신이 자신과 조인한다는 의미입니다. 그래서 자체 조인은 1개의 테이블을 사용합니다.
+
+```sql
+SELECT <열 목록>
+FROM <테이블> 별칭 A
+  INNER JOIN <테이블> 별칭 B
+  ON <조인될 조건>
+[WHERE 검색 조건];
+```
+
+```sql
+SELECT A.emp "직원", B.emp "직속상관", B.phone "직속상관연락처"
+	FROM emp_table A
+		INNER JOIN emp_table B
+        ON A.manager = B.emp
+	WHERE A.emp = '경리부장';
+```
+
+## 4-3. SQL 프로그래밍
