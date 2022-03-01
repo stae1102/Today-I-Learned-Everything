@@ -191,6 +191,17 @@
       - [자식 노드에 접근하기 - childNodes 속성](#자식-노드에-접근하기---childnodes-속성)
       - [원하는 위치에 노드 삽입하기 - insertBefore() 함수](#원하는-위치에-노드-삽입하기---insertbefore-함수)
       - [특정 노드 삭제하기 - removeChild() 함수와 parentNode 속성](#특정-노드-삭제하기---removechild-함수와-parentnode-속성)
+- [Chapter 9. 폼과 자바스크립트](#chapter-9-폼과-자바스크립트)
+  - [9-1. 폼 요소에 접근하는 여러 가지 방법](#9-1-폼-요소에-접근하는-여러-가지-방법)
+    - [id 값이나 class 값을 사용해 폼 요소에 접근하기](#id-값이나-class-값을-사용해-폼-요소에-접근하기)
+    - [name 값을 사용해 폼 요소에 접근하기](#name-값을-사용해-폼-요소에-접근하기)
+    - [폼 배열을 사용해 폼 요소에 접근하기](#폼-배열을-사용해-폼-요소에-접근하기)
+  - [9-2. 폼 요소에서 입력값 검증하기](#9-2-폼-요소에서-입력값-검증하기)
+    - [교재 실습](#교재-실습)
+  - [9-3. 다양한 폼 요소 다루기](#9-3-다양한-폼-요소-다루기)
+    - [선택 목록 및 옵션 항목에 접근하기](#선택-목록-및-옵션-항목에-접근하기)
+    - [선택 목록에서 사용자가 선택한 옵션 항목 찾아내기](#선택-목록에서-사용자가-선택한-옵션-항목-찾아내기)
+    - [라디오 버튼과 체크 상자에 접근하기](#라디오-버튼과-체크-상자에-접근하기)
 
 # Chapter 2. 자바스크립트와 친해지기
 
@@ -2325,3 +2336,126 @@ var firstP = document.querySelectorAll('p')[0] // 첫 번째 p 요소
 firstP.removeChild(firstDel) // 첫 번째 p 요소에 있는 첫 번째 X 삭제
 <span class=​"del">​X​</span>​
 ```
+
+# Chapter 9. 폼과 자바스크립트
+
+## 9-1. 폼 요소에 접근하는 여러 가지 방법
+
+### id 값이나 class 값을 사용해 폼 요소에 접근하기
+
+앞서 배운 DOM의 요소에 접근하는 것과 같습니다. querySelector를 이용해 원하는 요소에 접근하고 .value 예약어를 통해 텍스트 필드의 입력값을 추출할 수 있습니다.
+
+### name 값을 사용해 폼 요소에 접근하기
+
+폼 요소에 id나 class 속성이 없고 name 속성만 있다면 name 식별자를 사용해 폼 요소에 접근할 수도 있습니다. 다른 사람이 작성해 놓은 폼 소스에 name 속성만 있다면 이 방법을 사용해야 합니다.  
+
+이 방법을 사용하려면 `<form>` 태그에 name 속성이 지정되어 있어야 하고, `<form>` 태그 안에 포함된 폼 요소에도 name 속성이 있어야 합니다. name 속성을 사용해 폼 요소에 접근하려면 form의 name 값부터 폼 요소의 name 값까지 계층을 따라 하나씩 지정해줍니다.
+
+```js
+document.ship.shippingName;
+<input type=​"text" class=​"input-box" id=​"shippingName" name=​"shippingName">​
+```
+
+```js
+document.forms["ship"].elements["shippingName"];
+<input type="text" class="input-box" id="shippingName" name="shippingName">
+```
+
+id 식별자를 통해 접근하는 방법은 접근할 요소에 id 속성이 지정되어 있다면 쉽게 접근할 수 있지만, name 속성을 사용해 접근하려면 `<form>` 태그뿐만 아니라 접근하려는 폼 요소에 모두 name 속성이 지정되어 있는지 확인해야 합니다.
+
+### 폼 배열을 사용해 폼 요소에 접근하기
+
+이번에는 폼 배열을 사용해 폼 요소에 접근합니다. document의 속성 중 forms 속성은 문서 안에 있는 `<form>` 태그를 모두 가져와 배열 형태로 반환합니다. 이 방법은 **폼 요소에 id나 class속성도 없고 name 속성도 없을 때 사용합니다.**
+
+```js
+document.forms
+▶ HTMLCollection [form]
+```
+
+`<form>` 태그 안에 포함된 요소에 접근하려면 elements 속성을 사용합니다. 해당 폼 안에 있는 폼 요소를 모두 가져오는 속성입니다.
+
+```js
+document.forms[0].elements
+▶ HTMLFormControlsCollection(3) [input, input, button.order]
+```
+
+다음과 같이 폼 배열을 사용한 소스를 입력하면 첫 번째 폼의 첫 번째 요소, 즉 입력한 아이디 값을 가져올 수 있습니다.
+
+```js
+document.forms[0].elements[0].value
+'qwer1234'
+```
+
+## 9-2. 폼 요소에서 입력값 검증하기
+
+값이 입력됐는지, 입력된 값이 정해진 조건에 맞는지 등을 검사하는 이 작업은 흔히 폼 밸리데이션(Form Validation, 입력값 검증)이라고 불립니다. 여기에서는 회원가입 페이지를 예로 들어 입력한 글자 수를 확인하는 방법과 두 개의 필드 내용이 서로 같은지 확인하는 방법을 알아봅니다.
+
+### 교재 실습
+
+## 9-3. 다양한 폼 요소 다루기
+
+자바스크립트를 사용하면 사용자가 폼에서 어떤 항목을 선택했는지 알아낼 수 있습니다.
+
+### 선택 목록 및 옵션 항목에 접근하기
+
+선택목록(`<select>`)은 `<option>` 태그를 사용해 여러 항목을 한꺼번에 지정한 뒤 목록을 펼쳐 원하는 항목을 선택할 수 있는 요소입니다.
+
+선택 목록의 항목은 `<option>` 태그와 함꼐 사용하기 때문에, 자바스크립트에서 선택 목록에 접근하면 선택 목록에 있는 옵션 항목은 배열 형태로 저장됩니다. 그리고 **옵션 항목에 접근하려면 options 속성을 사용**합니다.
+
+options의 속성값 항목에는 option들이 들어있고 length 속성에는 옵션 항목의 개수가 저장되어 있습니다. 그리고 selectedIndex에는 여러 옵션 중 사용자가 선택한 옵션의 인덱스 값이 저장됩니다. 아무 것도 선택하지 않으면 기본 값 0이 출력됩니다.
+
+```js
+document.testForm.major.options
+```
+
+위의 예처럼 options에 접근할 수 있습니다. 또한, 화면에 표시하는 내용에 접근하려면 innerText 속성을 사용하고, 어떤 값을 서버로 넘겨주는지 알고 싶다면 value 속성을 사용합니다.
+
+```js
+document.testForm.major.options[4].innerText
+'전기전자공학과'
+document.testForm.major.options[4].value
+'elec'
+```
+
+### 선택 목록에서 사용자가 선택한 옵션 항목 찾아내기
+
+자바스크립트로 선택 목록에 접근하면 배열 형태가 반환되는데, 배열 안에 selectedIndex 속성이 있는 것을 확인했습니다. 이 속성에는 사용자가 선택 목록에서 선택한 항목의 인덱스 값이 저장됩니다. 그래서 콘솔 창에 다음과 같이 입력하면 사용자가 어떤 값을 선택했는지 알 수 있습니다.
+
+```js
+document.testForm.major.options.selectedIndex
+3
+```
+
+이것은 아래와 같이 응용 가능합니다
+
+```js
+var selectMenu = document.testForm.major;  // 셀렉트 메뉴를 가져와 selectMenu로 저장
+function displaySelect() {
+  var selectedText = selectMenu.options[selectMenu.selectedIndex].innerText;		
+  alert("[" + selectedText + "]를 선택했습니다.");
+}		
+```
+문서에 있는 선택 목록을 가져와 변수에 저장하고, selectedIndex를 통해 사용자가 선택한 항목을 알아낸 후 이를 사용하여 텍스트 내용을 저장합니다.
+
+### 라디오 버튼과 체크 상자에 접근하기
+
+여러 항목 중에서 원하는 항목을 선택하는 폼 요소 중에는 라디오 버튼과 체크 상자도 있습니다.  
+
+라디오 버튼은 여러 개의 항목 중에서 하나의 항목만 선택할 수 있고, 체크 상자는 여러 개 항목을 선택할 수 있다는 차이가 있습니다.
+
+교재 실습 파일에서 라디오 버튼의 name 값은 subject로 모두 같고, 체크 상자의 name 값은 서로 다릅니다.
+
+웹 브라우저 콘솔 창에 다음과 같이 입력하면 라디오 버튼의 name 값을 가진 요소가 여러 개이기 때문에 RadioNodeList라는 이름의 노드 리스트 형태로 저장됩니다.
+
+```js
+document.testForm.subject
+▶ RadioNodeList(3) [input, input, input, value: 'speaking']
+```
+
+체크 상자는 서로 다른 name 값을 가지기 때문에 name 이름을 직접 입력하여 체크 상자에 접근합니다.
+
+```js
+document.testForm.mailing1
+```
+
+라이도 버튼 요소나 체크 상자 요소에는 checked 속성이 있는데 기본 값은 false입니다. 그리고 해당 항목을 선택하면 값이 true로 바뀝니다.
