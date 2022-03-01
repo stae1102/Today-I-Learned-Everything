@@ -11,6 +11,16 @@
     - [1.1.4 논 블로킹 I/O](#114-논-블로킹-io)
     - [1.1.5 싱글 스레드](#115-싱글-스레드)
   - [1.2 서버로서의 노드](#12-서버로서의-노드)
+  - [1.3 서버 외의 노드](#13-서버-외의-노드)
+- [2장. 알아두어야 할 자바스크립트](#2장-알아두어야-할-자바스크립트)
+  - [2.1 ES2015+](#21-es2015)
+    - [2.1.1 const, let](#211-const-let)
+    - [2.1.2 템플릿 문자열](#212-템플릿-문자열)
+    - [2.1.3 객체 리터럴](#213-객체-리터럴)
+    - [2.1.4 화살표 함수](#214-화살표-함수)
+    - [2.1.5 구조분해 할당](#215-구조분해-할당)
+    - [2.1.6 클래스](#216-클래스)
+    - [2.1.7 프로미스](#217-프로미스)
 
 # 1장. 노드 시작하기
 
@@ -189,4 +199,324 @@ I/O 작업을 처리할 때는 멀티 스레딩보다 멀티 프로세싱이 효
 
 ## 1.2 서버로서의 노드
 
-* 노드는 기본적으로 싱글 스레드, 논 블로킹 모델을 사용하므로, 노드 서버 또한 동일한 모델일 수밖에 없습니다.
+* 노드는 기본적으로 싱글 스레드, 논 블로킹 모델을 사용하므로, 노드 서버 또한 동일한 모델일 수밖에 없습니다. **따라서 노드 서버의 장단점은 싱글 스레드, 논 블로킹 모델의 장단점과 크게 다르지 않습니다.**
+
+서버에는 기본적으로 I/O 요청이 많이 발생하므로, **I/O 처리를 잘하는 노드를 서버로 사용**하면 좋습니다. 노드는 libuv 라이브러리를 사용하여 I/O 작업을 **논 블로킹 방식**으로 처리합니다. **따라서 스레드 하나가 많은 수의 I/O를 혼자서도 감당**할 수 있습니다. 하지만 노드는 CPU 부하가 큰 작업에는 적합하지 않습니다. 우리가 작성하는 코드는 모두 스레드 하나에서 처리됩니다. 코드가 CPU 연산을 많이 요구하면 스레드 하나가 혼자서 감당하기 어렵습니다. 
+
+이와 같은 특성을 활용하려면 노드를 어디에 사용해야 할까요? **개수는 많지만 크기는 작은 데이터(CPU연산이 적은 데이터)를 실시간으로 주고받는 데 적합**합니다. 네트워크나 데이터베이스, 디스크 작업 같은 I/O에 특화되어 있기 때문입니다. 실시간 채팅 애플리케이션이나 주식 차트, JSON 데이터를 제공하는 API 서버가 노드를 많이 사용합니다.  
+
+노드 12 버전에서 워커 스레드 기능의 안정화로 멀티 스레드 작업을 할 수 있게 되었지만, 멀티 스레드 프로그래밍을 하는 것은 싱글 스레드에 비해 어렵습니다. 특히 스레드가 작업을 나눠서 처리할 수 있게 직접 나누어주는 것이 그렇습니다. 또한, 멀티 스레드 프로그래밍을 하더라도 C, C++, Rust, Go와 같은 언어에 비해 속도가 많이 느립니다.  
+
+따라서 멀티 스레드 기능이 있다고 하더라도 이미지나 비디오 처리, 혹은 대규모 데이터 처리처럼 CPU를 많이 사용하는 작업을 위한 서버로는 권장하지 않습니다. 그럼에도 사용하고자 한다면 AWS 람다(AWS Lambda)나 구글 클라우드 펑션스(Google Cloud Functions) 같은 서비스에서 노드로 CPU를 많이 사용하는 작업을 처리하는 것을 지원하므로 고려해야 합니다. **싱글 스레드 방식의 프로그래밍은 하나뿐인 스레드가 에러로 인해 멈추지 않도록 잘 관리해야 합니다.** 에러를 제대로 처리하지 못하면 하나뿐인 스레드가 죽어버려서 서버 전체가 멈추기 때문입니다. 노드에는 웹 서버가 내장되어 있으므로 편리하지만, 나중에 서버 규모가 커지면 nginx 등의 웹 서버를 노드 서버와 연결해야만 합니다.
+
+노드를 사용하면 자바스크립트를 사용하기에 하나의 언어로 웹 사이트를 개발할 수 있습니다. 생산성은 매우 좋지만, Go처럼 비동기에 강점을 보이는 언어나 nginx처럼 정적 파일 제공, 로드 밸런싱에 특화된 웹 서버에 비해서는 속도가 느립니다. 자바스크립트를 사용함으로써 얻을 수 있는 또 다른 장점은 JSON을 사용할 때 노드에서 쉽게 처리할 수 있는 것입니다.
+
+## 1.3 서버 외의 노드
+
+노드를 대부분 서버로 사용했지만, 노드는 자바스크립트 런타임이므로 용도가 서버에만 한정되지 않습니다. 웹, 모바일, 데스크톱 애플리케이션 개발에도 사용되기 시작했습니다. 노드 기반 웹 프레임워크로는 앵귤러(Angular), 리액트(React), 뷰(Vue) 등이 있습니다. 앵귤러는 구글 진영에서 프런트엔드 앱을 만들 때, 리액트는 페이스북 진영에서 주로 사용합니다. 모바일 개발 도구로는 리액트 네이티브(React Native)를 많이 사용합니다. 페이스북, 인스타그램, 핀터레스트, 월마트, 테슬라 등이 리액트 네이티브를 사용하여 모바일 앱을 운영 중입니다. 데스크톱 개발 도구로는 일렉트론(Electron)이 대표적입니다. 일렉트론으로 만들어진 프로그램으로는 Atom, Slack, Discord 등이 있습니다.
+
+# 2장. 알아두어야 할 자바스크립트
+
+## 2.1 ES2015+
+
+### 2.1.1 const, let
+
+```js
+if (true) {
+    var x = 3;
+}
+console.log(x); // 3
+
+if (true) {
+    const y = 3;
+}
+console.log(y); // Uncaught ReferenceError: y is not defined
+```
+
+var은 함수 스코프를 가지므로 if문의 블록과 관계없이 접근할 수 있습니다. 하지만 **const와 let은 블록 스코프를 가지므로** 블록 밖에서는 변수에 접근할 수 없습니다. 블록의 범위는 **if, while, for, function 등에서 볼 수 있는 중괄호({와 } 사이)** 입니다. 함수 스코프 대신 블록 스코프를 사용함으로써 호이스팅 같은 문제도 해결되고 코드 관리도 수월해졌습니다.
+
+* const는 한 번 값을 할당하면 다른 값을 할당할 수 없습니다. 다른 값을 할당하려고 하면 에러가 발생합니다. 또한, 초기화할 때 값을 할당하지 않으면 에러가 발생합니다. **따라서 const로 선언한 변수를 상수라고 부르기도 합니다.
+
+```js
+const a = 1;
+a = 0; // 에러 발생
+let b = 0;
+b = 1;
+const c; // 에러 발생
+```
+
+* 자바스크립트에서 한 번 초기화했던 변수에 다른 값을 할당하는 경우는 의외로 적기 때문에 변수 선언시에는 **기본적으로 const를 사용하고, 다른 값을 할당해야 하는 상황이 생겼을 때 let을 사용**하면 됩니다.
+
+### 2.1.2 템플릿 문자열
+
+백틱(`)으로 문자열을 감싸면 문자열 아에 변수를 넣을 수 있습니다.
+
+```js
+const num3 = 1;
+const num4 = 2;
+const result2 = 3;
+const string2 = `${num3} 더하기 ${num4}는 '${result2}'`;
+console.log(string2); // 1 더하기 2는 '3'
+```
+
+* ${변수} 형식으로 변수를 더하기 기호(연결 연산자) 없이 문자열에 넣을 수 있습니다. 백틱을 사용하기에 작은따옴표나 큰따옴표를 이스케이프 하지 않아도 됩니다.
+
+### 2.1.3 객체 리터럴
+
+다음 코드는 oldObject 객체에 동적으로 속성을 추가하고 있습니다.
+
+```js
+var sayNode = function() {
+    console.log('Node');
+};
+var es = 'ES';
+var oldObject = {
+    sayJS: function() {
+        console.log('JS');
+    },
+    sayNode: sayNode,
+};
+oldObject[es + 6] = 'Fantastic';
+oldObject.sayNode();    // Node
+oldObject.sayJS();      // JS
+console.log(oldObject.ES6);
+```
+
+이 코드를 다음과 같이 쓸 수 있습니다.
+
+```js
+const newObject = {
+    sayJS() {
+        console.log('JS');
+    },
+    sayNode,
+    [es + 6]: 'Fantastic',
+};
+newObject.sayNode();    // Node
+newObject.sayJS();      // JS
+console.log(newObject.ES6); // Fantastic
+```
+
+* sayJS 같은 객체의 메서드에 함수를 연결할 때 더는 콜론(:)과 function을 붙이지 않아도 됩니다.
+
+* sayNode: sayNode처럼 속성명과 변수명이 동일한 경우에는 한 번만 써도 되게 바뀌었습니다. 즉, 다음과 같은 경우 코드의 중복을 피할 수 있습니다.
+
+```js
+{ name: name, age: age } // ES5
+{ name, age } // ES2015
+```
+
+객체의 속성명은 **동적으로 생성할 수 있습니다.** 예전 문법은 객체 리터럴 바깥에서 [es + 6]를 해야 했지만, ES2015문법에서는 객체 리터럴 안에 동적 속성을 선언해도 됩니다. newObject 안에서 [es + 6]가 속성명으로 바로 사용되고 있습니다.
+
+### 2.1.4 화살표 함수
+
+```js
+function add1(x, y) {
+    return x + y;
+}
+
+const add2 = (x, y) => {
+    return x + y;
+};
+
+const add3 = (x, y) => x + y;
+
+const add4 = (x, y) => (x + y);
+
+function not1(x) {
+    return !x;
+}
+
+const not2 = x => !x;
+```
+
+add1, add2, add3, add4는 같은 기능을 하는 함수입니다. 마찬가지로 not1과 not2도 같은 기능을 합니다. 화살표 함수에서는 function 선언 대신 => 기호로 함수를 선언합니다. 또한 **변수에 대입하면 나중에 재사용할 수 있습니다.** 함수에서 내부에 return 밖에 없으면 return문을 줄일 수 있습니다.
+
+기존 function과 다른 점은 this 바인드 방식입니다.
+
+```js
+var relationship1 = {
+    name: 'zero',
+    friends: ['nero', 'hero', 'xero'],
+    logFriends: function() {
+        var that = this;    // relationship1을 가리키는 this를 that에 저장
+        this.friends.forEach(function (friend) {
+            console.log(that.name, friend);
+        });
+    };
+};
+relationship1.logFriends();
+// zero nero
+// zero hero
+// zero xero
+
+const relationship2 = {
+    name: 'zero',
+    friends: ['nero', 'hero', 'xero'],
+    logFriends() {
+        this.friends.forEach(friend => {
+            console.log(this.name, friend);
+        });
+    }
+};
+relationship2.logFriends();
+// zero nero
+// zero hero
+// zero xero
+```
+
+relationship1.logFriends() 안의 forEach문에서는 function 선언문을 사용했습니다. **각자 다른 함수 스코프의 this를 가지므로** that이라는 변수를 사용해서 relationship1에 간접적으로 접근하고 있습니다.
+
+하지만 relationship2.logFriend() 안의 forEach문에서는 화살표 함수를 사용했습니다. 따라서 **바깥 스코프인 logFriend()의 this를 그대로 사용**할 수 있습니다. **상위 스코프의 this를 그대로 물려받는 것입니다.**
+
+즉, 기본적으로는 화살표 함수를 쓰되, this를 사용해야 하는 경우에는 화살표 함수와 함수 선언문(function) 중에서 하나를 고르면 됩니다.
+
+### 2.1.5 구조분해 할당
+
+구조분해 할당을 사용하면 객체와 배열로부터 속성이나 요소를 쉽게 꺼낼 수 있습니다. 다음은 객체의 속성을 같은 이름의 변수에 대입하는 코드입니다.
+
+```js
+var candyMachine = {
+    status: {
+        name: 'node',
+        count: 5,
+    },
+    getCandy: function () {
+        this.status.count--;
+        return this.status.count;
+    },
+};
+var getCandy = candyMachine.getCandy;
+var count = candyMachine.status.count;
+```
+이 코드를 다음과 같이 바꿀 수 있습니다.
+```js
+const candyMachine = {
+    status: {
+        name:'node',
+        count: 5,
+    },
+    getCandy() {
+        this.status.count--;
+        return this.status.count;
+    },
+};
+const { getCandy, status: { count } } = candyMachine;
+```
+
+candyMachine 객체 안의 속성을 찾아서 변수와 매칭합니다. count처럼 여러 단계 안의 속성도 찾을 수 있습니다. getCandy와 count 변수가 초기화된 것입니다. 다만 구조분해 할당을 사용하면 함수의 this가 달라질 수 있습니다. 달라진 this를 원래대로 바꿔주려면 bind 함수를 따로 사용해야 합니다.
+
+* 배열에 대한 구조분해 할당 문법도 존재합니다.
+
+```js
+var array = ['nodejs', {}, 10, true];
+var node = array[0];
+var obj = array[1];
+var bool = array[3];
+```
+다음과 같이 바꿀 수 있습니다.
+```js
+const array = ['nodejs', {}, 10, true];
+const [node, obj, , bool] = array;
+```
+10은 변수를 주지 않았으므로 무시합니다. 노드는 모듈 시스템을 사용하므로 이러한 방식을 자주 씁니다.
+
+### 2.1.6 클래스
+
+클래스 문법도 추가되었습니다. 하지만 다른 언어처럼 클래스 기반으로 동작하는 것이 아니라 여전히 프로토타입 기반으로 동작합니다. 프로토타입 기반 문법을 보기 좋게 클래스로 바꾼 것입니다.
+
+다음은 프로토타입 상속 예제 코드입니다.
+
+```js
+var Human = function(type) {    // Human이라는 프로토타입 생성. type의 기본값은 human임
+    this.type = type || 'human';
+};
+
+Human.isHuman = function(human) {   // 인수 human이 Human의 인스턴스라면 true를 반환하며, 아닐 시 false를 반환
+    return human instanceof Human;
+}
+
+Human.prototype.breathe = function() {  // Human의 인스턴스에 breathe() 메서드 추가
+    alert('h-a-a-a-m');
+};
+
+var Zero = function(type, firstName, lastName) {    // human의 type에 적용. Zero에서 첫 번째 매개변수에 인수를 넣으면 human에 type을 넣은 것과 동일한 효과
+    Human.apply(this, arguments);
+    this.firstName = firstName;
+    this.lastName = lastName;
+}
+
+Zero.prototype = Object.create(Human.prototype);    // human의 메서드를 받음 breathe()를 입력하면 정상 작동됨, 생성자 Human.isHuman(oldZero)를 하면 true를 반환
+Zero.prototype.constructor = Zero;  // Zero를 통해 인스턴스를 생성할 때 상속하는 부분
+Zero.prototype.sayName = function() {   // Zero의 메서드
+    alert(this.firstName + ' ' + this.lastName);
+};
+var oldZero = new Zero('human','Zero', 'Cho');
+Human.isHuman(oldZero); // true
+```
+
+Zero 생성자 함수를 보면  상속받기 위한 코드가 상당히 난해합니다. Human.apply와 Object.create 부분이 상속받는 부분입니다.
+
+위 코드를 클래스 기반 코드로 바꿉니다.
+
+```js
+class Human {
+    constructor(type = 'human') {
+        this.type = type;
+    }
+
+    static isHuman(human) {
+        return human instanceof Human;
+    }
+
+    breathe() {
+        alert('h-a-a-a-m');
+    }
+}
+
+class Zero extends Human {
+    constructor(type, firstName, lastName) {
+        super(type);
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
+    sayName() {
+        super.breathe();
+        alert(`${this.firstName} ${this.lastName}`);
+    }
+}
+
+const newZero = new Zero('human', 'Zero', 'Cho');
+Human.isHuman(newZero);    // true
+```
+
+전반적으로 class 안으로 그룹화된 것을 볼 수 있습니다. 생성자 함수는 constructor 안으로 들어갔고, Human.isHuman 같은 클래스 함수는 static 키워드로 전환되었습니다. 프로토타입 함수들도 모두 class 블록 안에 포함되어 어떤 함수가 어떤 클래스 소속인지 보기 쉽습니다. 상속도 간단해져서 extends 키워드로 쉽게 상속 가능합니다. 다만, 자바스크립트는 클래스 문법으로 바뀌었더라도 프로토타입 기반으로 동작한다는 것을 명심해야 합니다.
+
+### 2.1.7 프로미스
+
+자바스크립트와 노드에서는 주로 **비동기**를 접합니다. 특히 이벤트 리스너를 사용할 때 콜백 함수를 자주 사용합니다. ES2015부터는 자바스크립트와 노드의 API들이 콜백 대신 **프로미스(Promise)** 기반으로 재구성되며, 악명 높은 콜백 지옥(callback hell) 현상을 극복했다는 평가를 받고 있습니다.
+
+프로미스는 다음과 같은 규칙이 있습니다. 먼저 프로미스 객체를 생성해야 합니다.
+
+```js
+const condition = true; // true면 resolve, false면 reject
+const promise = new Promise((resolve, reject) => {
+    if (condition) {
+        resolve('성공');
+    } else {
+        reject('실패');
+    }
+});
+// 다른 코드가 들어갈 수 있음
+promise
+    .then((message) => {
+        console.log(message);   // 성공(resolve)한 경우 실행
+    })
+    .catch((error) => {
+        console.error(error);   // 실패(reject)한 경우 실행
+    })
+    .finally(() => {    // 끝나고 무조건 실행
+        console.log('무조건');
+    });
+```
