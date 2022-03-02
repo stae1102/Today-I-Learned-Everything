@@ -21,6 +21,7 @@
     - [2.1.5 구조분해 할당](#215-구조분해-할당)
     - [2.1.6 클래스](#216-클래스)
     - [2.1.7 프로미스](#217-프로미스)
+    - [2.1.8 async/await](#218-asyncawait)
 
 # 1장. 노드 시작하기
 
@@ -520,3 +521,196 @@ promise
         console.log('무조건');
     });
 ```
+
+new Promise로 프로미스를 생성할 수 있으며, 그 내부에 resolve와 reject를 매개변수로 갖는 콜백 함수를 넣습니다.이렇게 만든 promise 변수에 then과 catch 메서드를 붙일 수 있습니다. 프로미스 내부에서 resolve가 호출되면 then이 실행되고, reject가 호출되면 catch가 실행됩니다. finally 부분은 성공/실패 여부와 상관없이 실행됩니다.
+
+resolve와 reject에 넣어준 인수는 각각 then과 catch의 매개변수에서 받을 수 있습니다. 즉, **`resolve('성공')`이 호출되면 then의 message가 '성공'이 됩니다.** 만약 **`reject('실패')`가 호출되면 catch의 error가 '실패'가 되는 것입니다.** condition 변수를 false로 바꿔보면 catch에서 에러가 로깅됩니다.
+
+프로미스를 쉽게 설명하자면, **실행은 바로 하되 결괏값은 나중에 받는 객체입니다.** 결괏값은 실행이 완료된 후 then이나 catch 메서드를 통해 받습니다. 위 예제에서는 new Promise와 promise, then 사이에 다른 코드가 들어갈 수도 있습니다. new Promise는 바로 실행되지만, 결괏값은 then을 붙였을 때 받게 됩니다.
+
+then이나 catch에서 다시 다른 then이나 catch를 붙일 수 있습니다. **이전 then의 return 값을 다음 then의 매개변수로 넘깁니다.** 프로미스를 return한 경우에는 **프로미스가 수행된 후 다음 then이나 catch가 호출**됩니다.
+
+```js
+promise
+    .then((message) => {
+        return new Promise((resolve, reject) => {
+            resolve(message);
+        });
+    })
+    .then((message2) => {
+        console.log(message2);
+        return new Promise((resolve, reject) => {
+            resolve(message2);
+        })
+    })
+    .then((message3) => {
+        console.log(message3);
+    })
+    .catch((error) => {
+        console.log(error);
+    });
+```
+
+처음 then에서 message를 resolve하면 다음 then에서 message2로 받을 수 있습니다. 여기서 다시 message2를 resolve한 것을 다음 then에서 message3으로 받았습니다. 단, then에서 newPromise를 return해야 다음 then에서 받을 수 있다는 것을 기억하세요.
+
+이것을 활용해서 콜백을 프로미스로 바꿀 수 있습니다. 다음은 콜백을 쓰는 패턴 중 하나입니다. 이를 프로미스로 바꿔보겠습니다.
+
+```js
+function findAndSaveUser(Users) {
+    Users.findOne({}, (err, user) => {  // 첫 번째 콜백
+        if (err) {
+            return console.error(err);
+        }
+        user.name = 'zero';
+        user.save((err) => { // 두 번째 콜백
+            if (err) {
+                return console.error(err);
+            }
+            Users.findOne({ gender: 'm' }, (err, user) => { // 세 번째 콜백
+                // 생략
+            })
+        })
+    })
+}
+```
+
+콜백 함수가 세 번 중첩되어 있습니다. 콜백 함수가 나올 때마다 코드의 깊이가 깊어집니다. 각 콜백 함수마다 에러도 따로 처리해줘야 합니다. 이 코드를 다음과 같이 바꿀 수 있습니다.
+
+```js
+function findAndSaveUser(Users) {
+    Users.findOne({})
+    .then((user) => {
+        user.name = 'zero';
+        return user.save();
+    })
+    .then((user) => {
+        return Users.findOne({ gender: 'm' });
+    })
+    .then((user) => {
+        // 생략
+    })
+    .catch(err => {
+        console.error(err);
+    });
+}
+```
+
+코드의 깊이가 세 단계 이상 깊어지지 않습니다. 위 코드에서 then 메서드들은 순차적으로 실행됩니다. 콜백에서 매번 따로 처리해야 했던 에러도 마지막 catch에서 한 번에 처리할 수 있습니다. 하지만 모든 콜백 함수를 위와 같이 바꿀 수 있는 것은 아닙니다. 메서드가 프로미스 방식을 지원해야 합니다.
+
+예제의 코드는 findOne과 save 메서드가 내부적으로 프로미스 객체를 가지고 있다고 가정했기에 가능합니다(new Promise가 함수 내부에 구현되어 있어야 합니다). 지원하지 않는 경우 콜백 함수를 프로미스로 바꿀 수 있는 방법은 3.5.6 절에 나와 있습니다.
+
+프로미스 여러 개를 한 번에 실행할 수 있는 방법이 있습니다. 기존의 콜백 패턴이었다면 콜백을 여러 번 중첩해서 사용해야 했을 것입니다. 하지만 Promise.all을 활용하면 간단히 할 수 있습니다.
+
+```js
+const promise1 = Promise.resolve('성공1');
+const promise2 = Promise.resolve('성공2');
+Promise.all([promise1, promise2])
+    .then((result) => {
+        console.log(result); // ['성공1', '성공2'];
+    })
+    .catch((error) => {
+        console.log(error);
+    });
+```
+
+Promise.resolve는 즉시 resolve하는 프로미스를 만드는 방법입니다. 비슷한 것으로 즉시 reject하는 Promise.reject도 있습니다. 프로미스가 여러 개 있을 때 Promise.all에 넣으면 모두 resolve될 때까지 기다렸다가 then으로 넘어갑니다. result 매개변수에 각각의 프로미스 결괏값이 배열로 들어 있습니다. Promise 중 하나라도 reject가 되면 catch로 넘어갑니다.
+
+### 2.1.8 async/await
+
+노드처럼 비동기 위주로 프로그래밍을 해야 할 때 도움이 많이 됩니다. 프로미스가 콜백 지옥을 해결했다지만, 여전히 코드가 장황합니다. then과 catch가 계속 반복되기 때문입니다. async/await 문법은 프로미스를 사용한 코드를 한 번 더 깔끔하게 줄입니다.
+
+2.1.7 절의 프로미스 코드를 다시 한 번 보겠습니다.
+
+```js
+function findAndSaveUser(Users) {
+    Users.findOne({})
+    .then((user) => {
+        user.name = 'zero';
+        return user.save();
+    })
+    .then((user) => {
+        return Users.findOne({ gender: 'm' });
+    })
+    .then((user) => {
+        // 생략
+    })
+    .catch(err => {
+        console.error(err);
+    });
+}
+```
+
+콜백과 다르게 코드의 깊이가 깊어지진 않지만, 코드는 여전히 깁니다. async/await 문법을 사용하면 다음과 같이 바꿀 수 있습니다. async function이라는 것이 추가되었습니다.
+
+```js
+async function findAndSaveUser(Users) {
+    let user = await User.findOne({});
+    user.name = 'zero';
+    user = await user.save();
+    user = await User.findOne({ gender: 'm' });
+    // 생략
+}
+```
+
+놀라운 정도로 코드가 짧아졌습니다. 함수 선언부를 일반 함수 대신 async function으로 교체한 후, 프로미스 앞에 await을 붙였습니다. 이제 함수는 해당 프로미스가 resolve될 때까지 기다린 뒤 다음 로직으로 넘어갑니다. 예를 들명 await Users.findOne({})이 resolve될 때까지 기다린 다음에 user 변수를 초기화하는 것입니다.
+
+위 코드는 에러를 처리하는 부분(프로미스가 reject된 경우)이 없으므로 다음과 같은 추가 작업이 필요합니다.
+
+```js
+async function findAndSaveUser(Users) {
+    try {
+        let user = await Users.findOne({});
+        user.name = 'zero';
+        user = await user.save();
+        user = await Users.findOne({ gender: 'm'});
+        // 생략
+    } catch (error) {
+        console.error(error);
+    }
+}
+```
+
+try/catch문으로 로직을 감쌌습니다. 프로미스의 catch 메서드처럼 try/catch문의 catch가 에러를 처리합니다.
+
+화살표 함수도 async와 같이 사용할 수 있습니다.
+
+```js
+const findAndSaveUser = async (Users) => {
+    try {
+        let user = await Users.findOne({});
+        user.name = 'zero';
+        user = await user.save();
+        user = await Users.findOne({ gender: 'm'});
+        // 생략
+    } catch (error) {
+        console.error(error);
+    }
+};
+```
+
+for문과 async/await을 같이 써서 프로미스를 순차적으로 실행할 수 있습니다.
+
+```js
+const promise1 = Promise.resolve('성공1');
+const promise2 = Promise.resolve('성공2');
+(async () => {
+    for await (promise of [promise1, promise2]) {
+        console.log(promise);
+    }
+})();
+```
+
+for await of문을 사용해서 프로미스 배열을 순회하는 모습입니다. async 함수의 반환값은 항상 Promise로 감싸집니다. 따라서 실행 후 then을 붙이거나 또 다른 async 함수 안에서 await를 붙여서 처리할 수 있습니다.
+
+```js
+async function findAndSaveUser(Users) {
+    // 생략
+}
+findAndSaveUser().then(() =< { /* 생략 */ }>);
+// 또는
+async function other() {
+    const result = await fundAndSaveUser();
+}
+```
+
+앞으로 중첩되는 콜백 함수가 있다면 프로미스를 거쳐 async/await 문법으로 바꾸는 연습을 하는 것이 좋습니다.
