@@ -102,6 +102,19 @@
       - [상호 조인](#상호-조인)
       - [자체 조인](#자체-조인)
   - [4-3. SQL 프로그래밍](#4-3-sql-프로그래밍)
+    - [4-3-1. IF문](#4-3-1-if문)
+      - [IF문의 기본 형식](#if문의-기본-형식)
+      - [IF ~ ELSE 문](#if--else-문)
+      - [IF 문의 활용](#if-문의-활용)
+    - [4-3-2. CASE 문](#4-3-2-case-문)
+      - [CASE 문의 기본 형식](#case-문의-기본-형식)
+      - [CASE 문의 활용](#case-문의-활용)
+    - [4-3-3. WHILE 문](#4-3-3-while-문)
+      - [WHILE 문의 기본 형식](#while-문의-기본-형식)
+      - [WHILE 문의 응용](#while-문의-응용)
+    - [4-3-4. 동적 SQL](#4-3-4-동적-sql)
+      - [PREPARE와 EXECUTE](#prepare와-execute)
+      - [동적 SQL의 활용](#동적-sql의-활용)
 
 # Chapter 1. 데이터베이스와 SQL
 
@@ -1250,3 +1263,289 @@ SELECT A.emp "직원", B.emp "직속상관", B.phone "직속상관연락처"
 ```
 
 ## 4-3. SQL 프로그래밍
+
+스토어드 프로시저는 MySQL에서 프로그래밍 기능이 필요할 때 사용하는 데이터베이스 개체입니다.
+
+```sql
+DELIMITER $$
+CREATE PROCEDURE 스토어드_프로시저_이름()
+BEGIN
+  SQL 프로그래밍 코딩
+END $$ -- 스토어드 프로시저 종료
+DELIMITER ; -- 종료 문자를 다시 세미콜론으로 변경
+CALL 스토어드_프로시저_이름() -- 스토어드 프로시저 실행
+```
+### 4-3-1. IF문
+
+#### IF문의 기본 형식
+
+```sql
+IF <조건식> THEN
+  SQL 문장들
+END IF;
+```
+
+'SQL 문장들'이 한 문장이라면 그 문장만 써도 되지만, 두 문장 이상이 처리되어야 할 때는 `BEGIN~END`로 묶어줘야 합니다.
+
+```sql
+DROP PROCEDURE IF EXISTS ifProc1;
+DELIMITER $$
+CREATE PROCEDURE ifProc1()
+BEGIN
+	IF 100 = 100 THEN
+		SELECT '100은 100과 같습니다.';	
+	END IF;
+END $$
+DELIMITER ;
+CALL ifProc1;
+```
+
+#### IF ~ ELSE 문
+
+참일 때와 더불어 거짓일 때 실행할 SQL문을 입력합니다.
+
+```sql
+DROP PROCEDURE IF EXISTS ifProc2;
+DELIMITER $$
+CREATE PROCEDURE ifProc2()
+BEGIN
+	DECLARE myNum INT;
+    SET myNum = 200;
+    IF myNum = 100 THEN
+		SELECT '100입니다.';
+	ELSE
+		SELECT '100이 아닙니다.';
+	END IF;
+END $$
+DELIMITER ;
+CALL ifProc2;
+```
+
+#### IF 문의 활용
+
+```sql
+DROP PROCEDURE IF EXISTS ifProc3;
+DELIMITER $$
+CREATE PROCEDURE ifProc3()
+BEGIN
+	DECLARE debutDate DATE; -- 데뷔일자
+    DECLARE curDate DATE; -- 오늘
+    DECLARE days INT; -- 활동한 일수
+    SELECT debut_date INTO debutDate
+		FROM market_db.member
+        WHERE mem_id = 'APN';
+	
+    SET curDate = CURRENT_DATE(); -- 현재 날짜
+    SET days = DATEDIFF(curDate, debutDate); -- 날짜의 차이, 일 단위
+    
+    IF (days/365) >= 5 THEN -- 5년이 지낫다면
+		SELECT CONCAT('데뷔한 지 ', days, '일이나 지났습니다. 핑순이들 축하합니다!');
+	ELSE
+		SELECT '데뷔한 지 ' + days + '일밖에 안되었네요. 핑순이들 화이팅~';
+	END IF;
+END $$
+DELIMITER ;
+CALL ifProc3 ;
+```
+
+SELECT INTO 변수는 결과를 변수에 저장합니다. CURRENT_DATE() 함수로 현재 날짜를 curDate에 저장합니다. DATEDIFF() 함수로 데뷔 일자부터 현재 날짜까지 일수를 days에 저장했습니다.(CURRENT_TIMESTAMP()는 오늘 날짜 및 시간을 함께 알려줍니다.)
+
+### 4-3-2. CASE 문
+
+여러 조건 중에서 선택하는 경우 CASE 문을 사용합니다.
+
+#### CASE 문의 기본 형식
+
+CASE 문은 2가지 이상의 여러 가지 경우일 때 처리가 가능하므로 '다중 분기'라고 부릅니다.
+
+```sql
+CASE
+  WHEN 조건1 THEN
+    SQL 문장들1
+  WHEN 조건2 THEN
+    SQL 문장들2
+  WHEN 조건3 THEN
+    SQL 문장들3
+  ELSE
+    SQL 문장들4
+END CASE;
+```
+모든 조건에 해당하지 않으면 ELSE를 실행합니다. 학점을 나누는 경우를 예로 들어보겠습니다.
+
+```sql
+DROP PROCEDURE IF EXISTS caseProc;
+DELIMITER $$
+CREATE PROCEDURE caseProc()
+BEGIN
+	DECLARE point INT ;
+    DECLARE credit CHAR(1);
+    SET point = 88;
+    
+    CASE
+		WHEN point >= 90 THEN
+			SET credit = 'A';
+		WHEN point >= 80 THEN
+			SET credit = 'B';
+		WHEN point >= 70 THEN
+			SET credit = 'C';
+		WHEN point >= 60 THEN
+			SET credit = 'D';
+		ELSE
+			SET credit = 'F';
+	END CASE;
+    SELECT CONCAT('취득점수==>', point), CONCAT('학점==>', credit);
+END $$
+DELIMITER ;
+CALL caseProc();
+```
+
+#### CASE 문의 활용
+
+CASE 문의 활용입니다. 총 구매액이 1500 이상인 경우 최우수 고객, 1000 ~ 1499일 경우 우수 고객, 1 ~ 999는 일반 고객, 0 이하는 유령 고객으로 세그먼트를 만들겠습니다.
+
+```sql
+SELECT mem_id, SUM(price*amount) "총 구매액"
+	FROM buy
+    GROUP BY mem_id;
+```
+추가적으로 구매액으로 내림차순 정렬합니다.
+```sql
+SELECT mem_id, SUM(price*amount) "총 구매액"
+	FROM buy
+    GROUP BY mem_id
+    ORDER BY SUM(price*amount) DESC;
+```
+회원의 이름을 출력하기 위해 구매 테이블과 조인합니다.
+```sql
+SELECT B.mem_id, M.mem_name, SUM(price*amount) "총 구매액"
+	FROM buy B
+		INNER JOIN member M
+        ON B.mem_id = M.mem_id
+    GROUP BY B.mem_id
+    ORDER BY SUM(price*amount) DESC;
+```
+구매하지 않은 회원의 아이디와 이름도 출력해보겠습니다.
+```sql
+SELECT M.mem_id, M.mem_name, SUM(price*amount) "총 구매액"
+	FROM buy B
+		RIGHT OUTER JOIN member M
+        ON B.mem_id = M.mem_id
+    GROUP BY M.mem_id
+    ORDER BY SUM(price*amount) DESC;
+```
+이제 CASE문을 활용해 회원등급을 지정합니다.
+```sql
+SELECT M.mem_id, M.mem_name, SUM(price*amount) "총 구매액",
+		CASE
+			WHEN (SUM(price*amount) >= 1500) THEN '최우수고객'
+            WHEN (SUM(price*amount) >= 1000) THEN '우수고객'
+            WHEN (SUM(price*amount) >= 1) THEN '일반고객'
+            ELSE '유령고객'
+		END "회원등급"
+	FROM buy B
+		RIGHT OUTER JOIN member M
+        ON B.mem_id = M.mem_id
+    GROUP BY M.mem_id
+    ORDER BY SUM(price*amount) DESC;
+```
+### 4-3-3. WHILE 문
+
+WHILE문은 필요한 만큼 계속 같은 내용을 반복할 수 있습니다.
+
+#### WHILE 문의 기본 형식
+
+```sql
+DROP PROCEDURE IF EXISTS whileProc;
+DELIMITER $$
+CREATE PROCEDURE whileProc()
+BEGIN
+	DECLARE i INT; -- 1에서 100까지 증가할 변수
+    DECLARE hap INT; -- 더한 값을 누적할 변수
+    SET i = 1;
+    SET hap = 0;
+    
+    WHILE (i <= 100) DO
+		SET hap = hap + i; -- hap의 원래 값에 i를 더해서 다시 hap에 넣으라는 의미
+        SET i = i + 1;     -- i의 원래 값에 1을 더해서 다시 i에 넣으라는 의미
+	END WHILE;
+	
+    SELECT '1부터 100까지의 합==>', hap;
+END $$
+DELIMITER ;
+CALL whileProc();
+```
+
+#### WHILE 문의 응용
+
+1에서 100까지의 합계에서 4의 배수를 제외시키려면 어껗게 해야 할까요? 추가로 숫자를 더하는 중간에 합계가 1,000이 넘는 순간의 숫자를 출력한 후 프로그램을 종료하고 싶다면 어떻게 해야 할까요? 이런 경우에 **ITERATE**문과 **LEAVE**문을 활용할 수 있습니다.
+
+* ITERATE[레이블]: 지정한 레이블로 가서 계속 진행합니다.
+* LEAVE[레이블]: 지정한 레이블을 빠져나갑니다. 즉 WHILE 문이 종료됩니다.
+
+```sql
+DROP PROCEDURE IF EXISTS whileProc2;
+DELIMITER $$
+CREATE PROCEDURE whileProc2()
+BEGIN
+	DECLARE i INT; -- 1에서 100까지 증가할 변수
+    DECLARE hap INT; -- 더한 값을 누적할 변수
+    SET i = 1;
+    SET hap = 0;
+    
+    myWhile: -- 레이블 지정
+    WHILE (i <= 100) DO
+		IF(i%4 = 0) THEN
+			SET i = i + 1;
+            ITERATE myWhile; -- 지정한 label 문으로 가서 계속 진행
+		END IF;
+        SET hap = hap + i;
+        IF (hap > 1000) THEN
+			LEAVE myWhile; -- 지정한 label 문을 떠남. 즉 While 종료
+		END IF;
+        SET i = i + 1;
+	END WHILE;
+    
+    SELECT '1부터 100까지의 합(4의 배수 제외), 1000 넘으면 종료 ==>', hap;
+END $$
+DELIMITER ;
+CALL whileProc2();
+```
+WHILE 문을 myWhile이라는 레이블로 지정했습니다. i가 4의 배수라면 i를 1증가시키고 ITERATE를 만나서 `myWhile:`로 올라갑니다. 즉, WHILE 문을 계속 진행합니다. hap이 1000을 초과하면 myWhile 레이블을 빠져나갑니다.
+
+### 4-3-4. 동적 SQL
+
+SQL 문은 내용이 고정되어 있는 경우가 대부분입니다. 하지만 상황에 따라 내용 변경이 필요할 때 동적 SQL을 사용하면 변경되는 내용을 실시간으로 적용시켜 사용할 수 있습니다.
+
+#### PREPARE와 EXECUTE
+**PREPARE**는 SQL 문을 실행하지는 않고 미리 준비해놓고, **EXECUTE**는 준비한 SQL 문을 실행합니다. 그리고 실행 후에는 **DEALLOCATE PREPARE**로 문장을 해제해주는 것이 바람직합니다.
+
+```sql
+USE market_db;
+PREPARE myQuery FROM 'SELECT * FROM member WHERE mem_id = "BLK"';
+EXECUTE myQuery;
+DEALLOCATE PREPARE myQuery;
+```
+PREPARE 문에서는 `SELECT * FROM member WHERE mem_id = "BLK"`를 바로 실행하지 않고 myQuery에 입력만 시켜놓습니다. 실행이 필요한 시점에서 `EXECUTE myQuery`문으로 실행합니다
+
+이렇게 미리 SQL을 준비한 후에 나중에 실행할 것을 동적 SQL이라고 부릅니다.
+
+#### 동적 SQL의 활용
+
+PREPARE 문에서는 ?로 향후에 입력될 값을 비워 놓고, EXECUTE에서 USING으로 ?에 값을 전달할 수 있습니다.
+
+```sql
+DROP TABLE IF EXISTS gate_table;
+CREATE TABLE gate_table (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+    entry_time DATETIME);
+
+SET @curDate = CURRENT_TIMESTAMP(); -- 현재 날짜와 시간
+
+PREPARE myQuery FROM 'INSERT INTO gate_table VALUES(NULL, ?)';
+EXECUTE myQuery USING @curDate;
+DEALLOCATE PREPARE myQuery;
+
+SELECT * FROM gate_table;
+```
+
+일반 SQL에서 변수는 @변수명으로 지정하는데 별도의 선언은 없어도 됩니다. 스토어드 프로시저에서 변수는 DECLARE로 선언한 후에 사용해야 합니다.
