@@ -22,6 +22,11 @@
     - [2.1.6 클래스](#216-클래스)
     - [2.1.7 프로미스](#217-프로미스)
     - [2.1.8 async/await](#218-asyncawait)
+  - [2.2 프런트엔드 자바스크립트](#22-프런트엔드-자바스크립트)
+    - [2.2.1 AJAX](#221-ajax)
+    - [2.2.2 FormData](#222-formdata)
+    - [2.2.3 encodeURIComponent, decodeURIComponent](#223-encodeuricomponent-decodeuricomponent)
+    - [2.2.4 데이터 속성과 dataset](#224-데이터-속성과-dataset)
 
 # 1장. 노드 시작하기
 
@@ -714,3 +719,165 @@ async function other() {
 ```
 
 앞으로 중첩되는 콜백 함수가 있다면 프로미스를 거쳐 async/await 문법으로 바꾸는 연습을 하는 것이 좋습니다.
+
+## 2.2 프런트엔드 자바스크립트
+
+### 2.2.1 AJAX
+
+AJAX(Asynchronous Javascript And XML)는 비동기적 웹 서비스를 개발할 때 사용하는 기법입니다. 이름에 XML이 들어있지만 JSON을 더 많이 사용합니다. **쉽게 말해 페이지 이동 없이 서버에 요청을 보내고 응답을 받는 기술입니다.** 웹 사이트 중에서 페이지 전환 없이 새로운 데이터를 불러오는 사이트는 대부분 AJAX 기술을 사용하고 있다고 보면 됩니다.
+
+보통 AJAX 요청은 jQuery나 axios 같은 라이브러리를 이용해서 보냅니다. XMLHttpRequest는 사용 방법이 복잡하고 서버에서는 사용할 수 없으므로 이 책에서는 axios를 사용합니다.
+
+프런트엔드에서 사용하려면 HTML 파일을 하나 만들고 그 안에 script 태그를 추가해야 합니다. 두 번째 script 태그 안에 앞으로 나오는 프런트엔드 예제 코드를 넣으면 됩니다.
+
+```html
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    // 예제 코드 삽입
+</script>
+```
+
+먼저 요청의 한 종류인 GET 요청을 보내겠습니다.
+
+axios.get 함수의 인수로 요청을 보낼 주소를 넣으면 됩니다.
+
+```js
+axios.get('https://www.zerocho.com/api/get')
+    .then((result) => {
+        console.log(result);
+        console.log(result.data); // {}
+    })
+    .catch((error) => {
+        console.error(error);
+    });
+```
+
+axios.get도 내부에 new Promise가 들어 있으므로 then과 catch를 사용할 수 있습니다. result.data에는 서버로부터 보낸 데이터가 들어 있습니다.
+
+프로미스이므로 async/await 방식으로 변경할 수 있습니다. 익명 함수라서 즉시 실행을 위해 코드를 소괄호로 감싸 호출했습니다.
+
+```js
+(async () => {
+        try {
+            const result = await axios.get('https://www.zerocho.com/api/get');
+            console.log(result);
+            console.log(result.data); // {}
+        } catch (error) {
+            console.error(error);
+        }
+    })();
+```
+
+이번에는 POST 방식의 요청을 보내겠습니다. POST 요청에서는 데이터를 서버로 보낼 수 있습니다.
+
+```js
+(async () => {
+        try {
+            const result = await axios.post('https://www.zerocho.com/api/post/json', {
+                name: 'zerocho',
+                birth: '1994',
+            });
+            console.log(result);
+            console.log(result.data); // {}
+        } catch (error) {
+            console.error(error);
+        }
+    })();
+```
+
+전체적인 구조는 비슷한데 두 번째 인수로 데이터를 넣어 보내는 것이 다릅니다. GET 요청이면 axios.get을, POST 요청이면 axios.post를 사용합니다.
+
+### 2.2.2 FormData
+
+HTML form 태그의 데이터를 동적으로 제어할 수 있는 기능입니다. 주로 AJAX와 함께 사용됩니다.
+
+먼저 FormData 생성자로 formData 객체를 만듭니다.
+
+```js
+const formData = new FormData();
+formData.append('name', 'zerocho');
+formData.append('item', 'orange');
+formData.append('item', 'melon');
+formData.has('item'); //true
+formData.has('money'); //false
+formData.get('item'); //'orange'
+formData.getAll('item'); // (2) ['orange', 'melon']
+formData.append('test', ['hi', 'zero']);
+formData.get('test'); //'hi,zero'
+formData.delete('test');
+formData.get('test'); //null
+formData.set('item', 'apple');
+formData.getAll('item'); // ['apple']
+```
+
+생성된 객체의 **append 메서드로 키-값 형식의 데이터를 저장**할 수 있습니다. append 메서드를 여러 번 사용해서 키 하나에 여러 개의 값을 추가해도 됩니다. **has 메서드는 주어진 키에 해당하는 값이 있는지 여부를 알립니다.** **get 메서드는 주어진 키에 해당하는 값 하나를 가져오고, getAll 메서드는 해당하는 모든 값을 가져옵니다.** **delete 메서드는 현재 키를 제거하는 메서드**고, **set은 현재 키를 수정하는 메서드**입니다.
+
+이제 axios로 폼 데이터를 서버에 보내면 됩니다.
+
+```js
+(async () => {
+    try {
+        const formData = new FormData();
+        formData.append('name', 'zerocho');
+        formData.append('birth', 1994);
+        const result = await axios.post('https://www.zerocho.com/api/post/formdata', formData);
+        console.log(result);
+        console.log(result.data);
+    } catch (error) {
+        console.error(error);
+    }
+})();
+```
+
+두 번째 인수에 데이터를 넣어 보냅니다.
+
+### 2.2.3 encodeURIComponent, decodeURIComponent
+
+AJAX 요청을 보낼 때, 'http://localhost:4000/search/노드'처럼 주소에 한글이 들어가는 경우가 있습니다. 서버 종류에 따라 다르지만 **서버가 한글 주소를 이해하지 못하는 경우가 있는데, 이럴 때는 window 객체의 메서드인 encodeURIComponent 메서드를 사용**합니다. 한글 주소 부분만 encodeURIComponent 메서드로 감쌉니다.
+
+```js
+(async () => {
+    try {
+        const result = await axios.get(`https://www.zerocho.com/api/search/${encodeURIComponent('노드')}`);
+        console.log(result);
+        console.log(result.data); // {}
+    } catch (error) {
+        console.error(error);
+    }
+})();
+```
+
+노드라는 한글 주소가 %EB%85%B8%EB%93%9C라는 문자열로 변환되었습니다.
+
+받는 쪽에서는 decodeURIComponent를 사용하면 됩니다. 역시 브라우저뿐만 아니라 노드에서도 사용할 수 있습니다.
+
+```js
+decodeURIComponent('%EB%85%B8%EB%93%9C'); // 노드
+```
+
+### 2.2.4 데이터 속성과 dataset
+
+노드를 웹 서버로 사용하는 경우, 클라이언트(프런트엔드)와 빈번하게 데이터를 주고받게 됩니다. 이때 서버에서 보내준 데이터를 프런트엔드 어디에 넣어야 할지 고민하게 됩니다.
+
+프런트엔드에 데이터를 내려보낼 때 첫 번째로 고려해야 할 점은 보안입니다. 클라이언트를 믿지 말라는 말이 있을 정도로 프런트엔드에 민감한 데이터를 내려보내는 것은 실수입니다. 비밀번호 같은 건 절대 내려보내지 마세요.
+
+보안과 무관한 데이터들은 자유롭게 프런트엔드로 보내도 됩니다. 자바스크립트 변수에 저장해도 되지만 HTML5에도 HTML과 관련된 데이터를 저장하는 공식적인 방법이 있습니다. 바로 속성(data attribute)입니다.
+
+```html
+<ul>
+    <li data-id="1" data-user-job="programmer">Zero</li>
+    <li data-id="2" data-user-job="designer">Nero</li>
+    <li data-id="3" data-user-job="programmer">Hero</li>
+    <li data-id="4" data-user-job="ceo">Kero</li>
+</ul>
+<script>
+    console.log(document.querySelector('li').dataset);
+    // { id: '1', userJob: 'programmer' }
+</script>
+```
+
+위와 같이 HTML 태그의 속성으로 data-로 시작하는 것들을 넣습니다. 이들이 데이터 속성입니다. 여기서는 data-id와 data-user-job을 주었습니다. 화면에 나타나지는 않지만 웹 애플리케이션 구동에 필요한 데이터들입니다. 나중에 이 데이터들을 사용해 서버에 요청을 보내게 됩니다.
+
+데이터 속성의 장점은 **자바스크립트로 쉽게 접근**할 수 있다는 점입니다. script 태그를 보면 dataset 속성을 통해 첫 번째 li 태그의 데이터 속성에 접근하고 있습니다. 단, 데이터 속성 이름이 조금씩 변형되었습니다. 앞의 data- 접두어는 사라지고 - 뒤에 위치한 글자는 대문자가 됩니다. data-id는 id, data-user-job은 userJob이 되는 것입니다.
+
+반대로 dataset에 데이터를 넣어도 HTML 태그에 반영됩니다. dataset.monthSalary = 10000; 을 넣으면 data-month-salary="10000"이라는 속성이 생깁니다.
