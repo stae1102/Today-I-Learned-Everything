@@ -178,6 +178,17 @@
       - [인덱스를 사용하지 않을 때](#인덱스를-사용하지-않을-때)
       - [인덱스 제거 실습](#인덱스-제거-실습)
   - [인덱스를 효과적으로 사용하는 방법](#인덱스를-효과적으로-사용하는-방법)
+- [Chapter 7. 스토어드 프로시저](#chapter-7-스토어드-프로시저)
+  - [7-1. 스토어드 프로시저 사용법](#7-1-스토어드-프로시저-사용법)
+    - [7-1-1. 스토어드 프로시저 기본](#7-1-1-스토어드-프로시저-기본)
+      - [스토어드 프로시저의 개념과 형식](#스토어드-프로시저의-개념과-형식)
+      - [스토어드 프로시저의 생성](#스토어드-프로시저의-생성)
+      - [스토어드 프로시저의 삭제](#스토어드-프로시저의-삭제)
+    - [7-1-2. 스토어드 프로시저 실습](#7-1-2-스토어드-프로시저-실습)
+      - [매개변수의 사용](#매개변수의-사용)
+      - [입력 매개변수의 활용](#입력-매개변수의-활용)
+      - [출력 매개변수의 활용](#출력-매개변수의-활용)
+      - [SQL 프로그래밍의 활용](#sql-프로그래밍의-활용)
 
 # Chapter 1. 데이터베이스와 SQL
 
@@ -2128,3 +2139,176 @@ SELECT table_name, constraint_name
   - 클러스터형 인덱스는 데이터 페이지를 읽는 수가 보조 인덱스보다 적기 때문에 성능이 더 우수하다. 그러므로 하나밖에 지정하지 못하는 클러스터형 인덱스(기본 키)는 조회할 때 가장 많이 사용되는 열에 지정하는 것이 효과적이다.
 
 * 사용하지 않는 인덱스는 제거한다.
+
+# Chapter 7. 스토어드 프로시저
+
+## 7-1. 스토어드 프로시저 사용법
+
+### 7-1-1. 스토어드 프로시저 기본
+
+#### 스토어드 프로시저의 개념과 형식
+
+쿼리 문의 집합으로도 볼 수 있으며, 어떠한 동작을 일괄 처리하기 위한 용도로 사용됨
+
+```sql
+DELIMITER $$
+CREATE PROCEDURE myProc()
+BEGIN
+  SQL 프로그래밍 코드 작성
+END $$
+DELIMITER ;
+```
+
+1. \$$로 스토어드 프로시저를 묶어준다. ##, %%, &&, // 등으로 바꿔도 된다.
+2. 스토어드 프로시저의 이름을 정해준다. 괄호 안에 들어가는 것은 (IN 또는 OUT 매개변수)이다.
+
+> **DELIMITER의 의미**
+> 
+> DELIMITER는 '구분자'라는 의미이다. SQL 에서는 주로 세미콜론을 이용해서 문장을 끝내기 때문에 어디까지 프로시저인지 끝이 모호할 수 있기 때문에 \$$가 붙은 곳이 프로시저의 영역임을 알리는 역할을 한다.
+
+스토어드 프로시저는 다음과 같이 불러올 수 있다.
+
+```sql
+CALL 스토어드_프로시저_이름();
+```
+
+#### 스토어드 프로시저의 생성
+
+```sql
+USE market_db;
+DROP PROCEDURE IF EXISTS user_proc;
+DELIMITER $$
+CREATE PROCEDURE user_proc()
+BEGIN
+	SELECT * FROM member;
+END $$
+DELIMITER ;
+
+CALL user_proc();
+```
+
+#### 스토어드 프로시저의 삭제
+
+```sql
+DROP PROCEDURE 스토어드_프로시저_이름;
+```
+
+괄호를 붙이지 않는 것이 특징이다.
+
+### 7-1-2. 스토어드 프로시저 실습
+
+#### 매개변수의 사용
+
+스토어드 프로시저에서는 실행 시 입력 매개변수(parameter)를 지정할 수 있다.
+
+```sql
+IN 입력_매개변수_이름 데이터_형식
+```
+입력 매개변수가 있는 스토어드 프로시저를 실행하기 위해서는 다음과 같이 괄호 안에 값을 전달한다.
+
+```sql
+CALL 프로시저_이름(전달_값);
+```
+스토어드 프로시저에서 처리된 결과를 **출력 매개변수**를 통해 얻을 수도 있다.
+
+```sql
+OUT 출력_매개변수_이름 데이터_형식
+```
+출력 매개변수에 값을 대입하기 위해서 주로 `SELECT ~ INTO`문을 사용한다. 출력 매개변수가 있는 스토어드 프로시저를 실행하기 위해서는 다음과 같이 사용한다.
+
+```sql
+CALL 프로시저_이름(@변수명);
+SELECT @변수명;
+```
+
+#### 입력 매개변수의 활용
+
+```sql
+...
+CREATE PROCEDURE user_proc1(IN userName VARCHAR(10))
+BEGIN
+	SELECT * FROM member WHERE mem_name = userName;
+...
+```
+
+입력 매개변수가 2개 이상일 때도 가능하다
+
+```sql
+...
+CREATE PROCEDURE user_proc2(
+	IN userNumber INT,
+    IN userHeight INT )
+...
+
+CALL user_proc2(6, 165);
+```
+
+#### 출력 매개변수의 활용
+
+```sql
+DELIMITER $$
+CREATE PROCEDURE user_proc3(
+	IN txtValue CHAR(10),
+    OUT outValue INT )
+BEGIN
+	INSERT INTO noTable VALUES(NULL, txtValue);
+    SELECT MAX(id) INTO outValue FROM noTable;
+END $$
+DELIMITER ;
+```
+
+```sql
+CREATE TABLE IF NOT EXISTS noTable(
+	id INT AUTO_INCREMENT PRIMARY KEY,
+    txt CHAR(10)
+);
+```
+
+```sql
+CALL user_proc3 ('테스트', @myValue);
+SELECT CONCAT('입력된 ID 값 ==>', @myValue);
+```
+
+출력 매개변수 위치에 **@변수명** 형태로 변수를 전달해주면 그 변수애 결과가 저장된다.
+
+#### SQL 프로그래밍의 활용
+
+```sql
+DROP PROCEDURE IF EXISTS while_proc;
+DELIMITER $$
+CREATE PROCEDURE while_proc( IN memNumber INT )
+BEGIN
+	DECLARE num INT;
+    DECLARE hap INT;
+    SET num = 1;
+    SET hap = 0;
+    
+    WHILE (num <= memNumber) DO
+		SET hap = hap + num;
+        SET num = num + 1;
+	END WHILE;
+	SELECT hap AS '1부터 더한 결과입니다.';
+END $$
+DELIMITER ;
+
+CALL while_proc(100);
+```
+
+**동적 SQL**
+
+```sql
+DROP PROCEDURE IF EXISTS dynamic_proc;
+DELIMITER $$
+CREATE PROCEDURE dynamic_proc(
+	IN tableName VARCHAR(20)
+)
+BEGIN
+	SET @sqlQuery = CONCAT('SELECT * FROM ', tableName);
+    PREPARE myQuery FROM @sqlQuery;
+    EXECUTE myQuery;
+    DEALLOCATE PREPARE myQuery;
+END $$
+DELIMITER ;
+
+CALL dynamic_proc ('member');
+```
