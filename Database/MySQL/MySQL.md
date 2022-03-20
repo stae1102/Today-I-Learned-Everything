@@ -189,6 +189,20 @@
       - [입력 매개변수의 활용](#입력-매개변수의-활용)
       - [출력 매개변수의 활용](#출력-매개변수의-활용)
       - [SQL 프로그래밍의 활용](#sql-프로그래밍의-활용)
+  - [7-2. 스토어드 함수와 커서](#7-2-스토어드-함수와-커서)
+    - [7-2-1. 스토어드 함수](#7-2-1-스토어드-함수)
+      - [스토어드 함수의 개념과 형식](#스토어드-함수의-개념과-형식)
+      - [스토어드 함수의 사용](#스토어드-함수의-사용)
+    - [7-2-2. 커서로 한 행씩 처리하기](#7-2-2-커서로-한-행씩-처리하기)
+      - [커서의 기본 개념](#커서의-기본-개념)
+      - [커서의 단계별 실습](#커서의-단계별-실습)
+      - [커서의 통합 코드](#커서의-통합-코드)
+  - [7-3. 자동 실행되는 트리거](#7-3-자동-실행되는-트리거)
+    - [7-3-1. 트리거 기본](#7-3-1-트리거-기본)
+      - [트리거의 개요](#트리거의-개요)
+      - [트리거의 기본 작동](#트리거의-기본-작동)
+      - [트리거의 활용](#트리거의-활용)
+      - [트리거가 사용하는 임시 테이블](#트리거가-사용하는-임시-테이블)
 
 # Chapter 1. 데이터베이스와 SQL
 
@@ -2312,3 +2326,300 @@ DELIMITER ;
 
 CALL dynamic_proc ('member');
 ```
+
+## 7-2. 스토어드 함수와 커서
+
+함수, 커서 -> 데이터베이스 개체
+
+### 7-2-1. 스토어드 함수
+
+#### 스토어드 함수의 개념과 형식
+
+MySQL에서 사용자가 직접 함수를 만들어서 사용할 수 있다. 이렇게 직접 만들어서 사용하는 함수를 스토어드 함수라고 부른다.
+
+```sql
+DELIMITER $$
+CREATE FUNCTION 스토어드_함수_이름(매개변수)
+    RETURNS 반환형식
+BEGIN
+
+    이 부분에 프로그래밍 코딩
+    RETURN 반환값;
+
+END $$
+DELIMITER ;
+SELECT 스토어드_함수_이름();
+```
+
+* 스토어드 함수는 **RETURNS 문으로 반환할 데이터 형식을 지정**하고, 본문 안에서는 **RETURN 문으로 하나의 값을 반환**해야 한다.
+
+* 스토어드 함수의 매개변수는 모두 **입력 매개변수**이다. 그리고 IN을 붙이지 않는다.
+
+* 스토어드 함수는 SELECT 문 안에서 호출된다(스토어드 프로시저는 CALL로 호출).
+
+* 스토어드 함수 안에서는 SELECT를 사용할 수 없다.
+
+* 스토어드 함수는 어떤 계산을 통해서 하나의 값을 반환하는 데 주로 사용.
+
+#### 스토어드 함수의 사용
+
+스토어드 함수를 사용하기 위해서는 다음 SQL로 함수 생성 권한을 허용해줘야 한다.
+
+```sql
+SET GLOBAL log_bin_trust_function_creators = 1;
+```
+
+```sql
+DELIMITER $$
+CREATE FUNCTION sumFunc(number1 INT, number2 INT)
+	RETURNS INT
+BEGIN
+	RETURN number1 + number2;
+END $$
+DELIMITER ;
+
+SELECT sumFunc(100, 200) AS '함계';
+```
+RETURNS를 통해 반환하는 데이터 형식을 정수로 지정하고, RETURN을 통해 결과를 반환한다.
+
+```sql
+DROP FUNCTION IF EXISTS calcYearFunc;
+DELIMITER $$
+CREATE FUNCTION calcYearFunc(dYear INT)
+	RETURNS INT
+BEGIN
+	DECLARE runYear INT; -- 활동기간(연도)
+    SET runYear = YEAR(CURDATE()) - dYear;
+    RETURN runYear;
+END $$
+DELIMITER ;
+
+SELECT calcYearFunc(2015);
+```
+
+필요하다면 다음과 같이 함수의 반환 값을 `SELECT ~ INTO ~`로 저장했다가 사용할 수도 있다.
+
+```sql
+SELECT calcYearFunc(2007) INTO @debut2007;
+SELECT calcYearFunc(2013) INTO @debut2013;
+SELECT @debut2007 - @debut2013 AS '2007과 2013 차이';
+```
+위에서 만든 연도 함수를 통해 SELECT로 데이터를 조회할 때 함수를 활용하여 열의 정보를 변형한 채 불러올 수도 있다.
+
+```sql
+SELECT mem_id, mem_name, calcYearFunc(YEAR(debut_date)) AS '활동 햇수'
+	FROM member;
+```
+
+SHOW가 데이터베이스 개체를 보기 위해 사용하는 메서드이기 때문에 스토어드 함수도 조회가 가능하다.
+
+```sql
+SHOW CREATE FUNCTION 함수_이름;
+```
+
+함수의 삭제도 마찬가지로 DROP을 통해 가능하다
+
+```sql
+DROP FUNCTION calcYearFunc;
+```
+
+### 7-2-2. 커서로 한 행씩 처리하기
+
+#### 커서의 기본 개념
+
+커서는 첫 번째 행을 처리한 후에 마지막 행까지 한 행씩 접근해서 값을 처리한다. 일반적으로 다음의 작동 순서를 통해 처리된다.
+
+> 1. 커서 선언하기  
+> ↓  
+> 2. 반복 조건 선언하기  
+> ↓  
+> 3. 커서 열기  
+> ↓  
+> 4. 데이터 가져오기 & 데이터 처리하기 (**이 부분을 반복한다.**)  
+> ↓  
+> 5. 커서 닫기  
+
+커서는 대부분 스토어드 프로시저와 함께 사용된다.
+
+#### 커서의 단계별 실습
+
+가수 그룹의 평균 인원수를 구하는 스토어드 프로시저를 작성.
+
+1. **사용할 변수 준비하기**
+
+회원의 평균 인원수를 계산하기 위해, 각 회원의 인원수(memNumber), 전체 인원의 합계(totNumber), 읽은 행의 수(cnt) 변수를 준비한다.
+
+`DEFAULT` 문을 사용해서 초기값을 0으로 설정한다.
+
+```sql
+DECLARE memNumber INT;
+DECLARE cnt INT DEFAULT 0;
+DECLARE totNumber INT DEFAULT 0;
+```
+
+추가적으로 행의 끝을 파악하기 위한 변수 `endOfRow`를 준비한다. 처음은 행의 끝이 아닐 것이기 때문에 `DEFAULT FALSE`로 초기화한다.
+
+```sql
+DECLARE endOfRow BOOLEAN DEFAULT FALSE;
+```
+
+2. **커서 선언하기**
+
+커서라는 것은 결국 SELECT문이다. 회원 테이블을 조회하는 구문을 커서로 만들어 놓으면 된다.
+
+```sql
+DECLARE memberCursor CURSOR FOR
+    SELECT mem_number FROM member;
+```
+
+3. **반복 조건 선언하기**
+
+향의 끝에 다다르면 앞에서 선언한 endOfRow 변수를 TRUE로 설정한다. **`DECLARE CONTINUE HANDLER`**는 반복 조건을 준비하는 예약어이다. 그리고 **`FOR NOT FOUND`**는 더 이상 행이 없을 때 이어진 문장을 수행한다. 즉, 행이 끝나면 endOfRow에 TRUE를 대입한다.
+
+```sql
+DECLARE CONTINUE HANDLER
+    FOR NOT FOUND SET endOfRow = TRUE;
+```
+
+4. **커서 열기**
+
+```sql
+OPEN memberCursor;
+```
+
+5. **행 반복하기**
+
+```sql
+cursor_loop: LOOP
+    이 부분을 반복
+END LOOP cursor_loop
+```
+
+cursor_loop는 반복할 부분의 이름을 지정한 것이다. 이 코드는 무한 반복하기 때문에 코드 안에 반복문을 빠져나갈 조건이 필요하다. endOfRow가 행의 끝을 나타내는 변수이기 때문에 endOfRow를 TRUE가 되었을 때 반복문을 빠져나가도록 설계한다.
+
+LEAVE는 반복할 이름을 빠져나간다.
+
+```sql
+IF endOfRow THEN
+    LEAVE cursor_loop;
+END IF;
+```
+
+`FETCH`는 한 행씩 읽어오는 것이다.
+
+```sql
+cursor_loop: LOOP
+    FETCH memberCursor INTO memNumber;
+
+    IF endOfRow THEN
+        LEAVE cursor_loop;
+    END IF;
+
+    SET cnt = cnt + 1;
+    SET totNumber = totNumber + memNumber;
+END LOOP cursor_loop;
+```
+
+이제 반복을 빠져나왔고, 누적된 총 인원수를 읽은 행의 수로 나누면 된다.
+
+```sql
+SELECT (totNumber/cnt) AS '회원의 평균 인원 수';
+```
+
+6. **커서 닫기**
+
+모든 작업이 끝나면 커서를 닫는다.
+
+```sql
+CLOSE memberCursor;
+```
+
+#### 커서의 통합 코드
+
+```sql
+USE market_db;
+DROP PROCEDURE IF EXISTS cursor_proc;
+DELIMITER $$
+CREATE PROCEDURE cursor_proc()
+BEGIN
+	DECLARE memNumber INT;
+    DECLARE totNumber INT DEFAULT 0;
+    DECLARE cnt INT DEFAULT 0;
+    DECLARE endOfRow BOOLEAN DEFAULT FALSE;
+    
+    DECLARE memberCursor CURSOR FOR
+		SELECT mem_number FROM member;
+	
+    DECLARE CONTINUE HANDLER
+		FOR NOT FOUND SET endOfRow = TRUE;
+        
+	OPEN memberCursor;
+    
+    cursor_loop: LOOP
+		FETCH memberCursor INTO memNumber;
+        
+        IF endOfRow THEN
+			LEAVE cursor_loop;
+		END if;
+        
+        SET cnt = cnt + 1;
+        SET totNumber = totNumber + memNumber;
+	END LOOP cursor_loop;
+    
+    SELECT (totNumber/cnt) AS '회원의 평균 인원 수';
+    
+	CLOSE memberCursor;
+END $$
+DELIMITER ;
+
+CALL cursor_proc();
+```
+
+## 7-3. 자동 실행되는 트리거
+
+### 7-3-1. 트리거 기본
+
+#### 트리거의 개요
+
+트리거란 테이블에 INSERT나 UPDATE 또는 DELETE 작업이 발생하면 실행되는 코드이다.
+
+예를 들어 회사에서 퇴사자가 발생해 해당 정보를 퇴사자 테이블로 옮긴다고 할 때, 수작업으로 하다보면 실수로 저장하지 못할 수도 있다. 이를 방지하기 위해 자동으로 옮길 수도 있는데 이런 기능을 하는 것이 트리거이다.
+
+#### 트리거의 기본 작동
+
+트리거는 테이블에서 **DML**(Data Manipulation Language)문 (**INSERT, UPDATE, DELETE 등**)의 **이벤트**가 발생할 때 작동한다.
+
+```sql
+DROP TRIGGER IF EXISTS myTrigger;
+DELIMITER $$
+CREATE TRIGGER myTrigger
+	AFTER DELETE
+    ON trigger_table
+    FOR EACH ROW
+BEGIN
+	SET @msg = '가수 그룹이 삭제됨';
+END $$
+DELIMITER ;
+```
+
+trigger 이름을 myTrigger로 설정한다. `AFTER DELETE`는 DELETE 문이 발생된 이후에 발생한다는 것이며 `ON`은 트리거를 부착할 테이블을 지정한다. `FOR EACH ROW`는 각 행마다 적용한다는 의미고 항상 써준다.
+
+BEGIN부터 END 까지는 트리거가 실제로 작동할 부분이다. 이제 trigger_table에서 DELETE를 수행할 때마다 트리거가 실행된다.
+
+#### 트리거의 활용
+
+* **OLD 테이블**은 UPDATE나 DELETE가 수행될 때, 변경되지 전의 데이터가 잠깐 저장되는 임시 테이블이다. OLD 테이블에 UPDATE 문이 작동되면 이 행에 의해서 업데이트되기 전의 데이터가 **백업 테이블**에 입력된다. 즉, 원본 데이터가 보존된다.
+
+* 백업 테이블은 BEGIN과 END 사이에 INSERT INTO를 사용해서 넣는다.
+
+트리거를 DELETE에 사용했기 때문에 TRUNCATE로 모든 행 데이터를 삭제해도 트리거가 작동하지 않아 백업 데이터가 저장되지 않는다.
+
+#### 트리거가 사용하는 임시 테이블
+
+DML 문 작업이 수행되면 임시로 사용되는 시스템 테이블 NEW와 OLD가 있다.
+
+먼저 NEW 테이블은 INSERT 문이 실행되면 작동한다. NEW 테이블에 새 값이 입려되고, 다시 테이블에 들어간다.
+
+OLD 테이블은 DELETE 문이 실행되면 예전 값이 **삭제되기 전에 OLD 테이블에 잠깐 들어가 있는다.** 그래서 AFTER DELETE 트리거를 만들어도 삭제된 후에 OLD.열 이름 형식으로 예전 값에 접근할 수 있는 것이다.
+
+마지막으로 UPDATE(새값, 예전 값)을 사용하면 NEW 테이블과 OLD 테이블을 모두 사용한다.
